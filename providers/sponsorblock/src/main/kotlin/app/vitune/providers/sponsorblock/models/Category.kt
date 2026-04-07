@@ -3,6 +3,7 @@ package app.vitune.providers.sponsorblock.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Suppress("unused")
 @Serializable
 enum class Category(val serialName: String) {
     @SerialName("sponsor")

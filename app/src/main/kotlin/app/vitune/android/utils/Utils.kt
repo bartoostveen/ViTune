@@ -93,7 +93,10 @@ val Playlist.Video.asMediaItem: MediaItem?
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(uploaderName)
-                    .setArtworkUri(Uri.parse(thumbnailUrl.toString()))
+                    .also {
+                        runCatching { thumbnailUrl.toString().toUri() }.getOrNull()
+                            ?.let { uri -> it.setArtworkUri(uri) }
+                    }
                     .setExtras(
                         SongBundleAccessor.bundle {
                             durationText = duration.toComponents { minutes, seconds, _ ->

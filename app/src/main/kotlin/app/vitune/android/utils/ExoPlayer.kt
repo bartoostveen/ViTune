@@ -40,6 +40,8 @@ class RangeHandlerDataSourceFactory(private val parent: DataSource.Factory) : Da
             )
             else throw e
         }
+
+        override fun getResponseHeaders(): Map<String, List<String>> = parent.responseHeaders
     }
 
     override fun createDataSource() = Source(parent.createDataSource())
@@ -62,6 +64,8 @@ class CatchingDataSourceFactory(
                 /* errorCode = */ PlaybackException.ERROR_CODE_UNSPECIFIED
             ).also { onError?.invoke(it) }
         }
+
+        override fun getResponseHeaders(): Map<String, List<String>> = parent.responseHeaders
     }
 
     override fun createDataSource() = Source(parent.createDataSource())
@@ -93,6 +97,8 @@ class FallbackDataSourceFactory(
                 throw ex
             }
         }
+
+        override fun getResponseHeaders(): Map<String, List<String>> = parent.responseHeaders
     }
 
     override fun createDataSource() = Source(upstream.createDataSource())
@@ -151,11 +157,14 @@ class RetryingDataSourceFactory(
             )
             throw lastException!!
         }
+
+        override fun getResponseHeaders(): Map<String, List<String>> = parent.responseHeaders
     }
 
     override fun createDataSource() = Source(parent.createDataSource())
 }
 
+// TODO: fix this mess
 inline fun <reified T : Throwable> DataSource.Factory.retryIf(
     maxRetries: Int = 5,
     printStackTrace: Boolean = false,
@@ -171,7 +180,7 @@ fun DataSource.Factory.retryIf(
     predicate: (Throwable) -> Boolean
 ): DataSource.Factory = RetryingDataSourceFactory(this, maxRetries, printStackTrace, exponential, predicate)
 
-val Cache.asDataSource get() = CacheDataSource.Factory().setCache(this)
+val Cache.asDataSource: CacheDataSource.Factory get() = CacheDataSource.Factory().setCache(this)
 
 val Context.defaultDataSource
     get() = DefaultDataSource.Factory(

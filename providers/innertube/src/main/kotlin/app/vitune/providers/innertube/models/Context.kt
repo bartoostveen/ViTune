@@ -1,16 +1,10 @@
 package app.vitune.providers.innertube.models
 
-import app.vitune.providers.innertube.Innertube
-import app.vitune.providers.innertube.json
-import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.headers
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpMessageBuilder
 import io.ktor.http.parameters
 import io.ktor.http.userAgent
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -66,31 +60,12 @@ data class Context(
         }
 
         @Transient
-        private val mutex = Mutex()
-
-        @Transient
         private var ytcfg: Configuration? = null
-
-        private val baseUrl
-            get() = when {
-                platform == "TV" -> "https://www.youtube.com/tv"
-                music -> "https://music.youtube.com/"
-                else -> "https://www.youtube.com/"
-            }
-        val root get() = if (music) "https://music.youtube.com/" else "https://www.youtube.com/"
-
-        internal val jsUrl
-            get() = ytcfg?.playerUrl
-                ?: ytcfg?.contextConfigs?.firstNotNullOfOrNull { it.value.jsUrl }
 
         val visitorData
             get() = ytcfg?.visitorData
                 ?: ytcfg?.innertubeContext?.client?.defaultVisitorData
                 ?: defaultVisitorData
-
-        companion object {
-            private val YTCFG_REGEX = "ytcfg\\.set\\s*\\(\\s*(\\{[\\s\\S]+?\\})\\s*\\)".toRegex()
-        }
 
         context(builder: HttpMessageBuilder)
         fun apply() = with(builder) {
@@ -107,27 +82,6 @@ data class Context(
 
             parameters {
                 apiKey?.let { set("key", it) }
-            }
-        }
-
-        suspend fun getConfiguration(): Configuration? = mutex.withLock {
-            ytcfg ?: runCatching {
-                val playerPage = Innertube.client.get(baseUrl) {
-                    userAgent?.let { header("User-Agent", it) }
-                }.bodyAsText()
-
-                val objStr = YTCFG_REGEX
-                    .find(playerPage)
-                    ?.groups
-                    ?.get(1)
-                    ?.value
-                    ?.trim()
-                    ?.takeIf { it.isNotBlank() } ?: return@runCatching null
-
-                json.decodeFromString<Configuration>(objStr).also { ytcfg = it }
-            }.getOrElse {
-                it.printStackTrace()
-                null
             }
         }
     }
@@ -194,21 +148,6 @@ data class Context(
             )
         )
 
-        val DefaultAndroid = Context(
-            client = Client(
-                clientId = 3,
-                clientName = "ANDROID",
-                clientVersion = "19.44.38",
-                osName = "Android",
-                osVersion = "11",
-                platform = "MOBILE",
-                androidSdkVersion = 30,
-                userAgent = UserAgents.ANDROID,
-                apiKey = "AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w",
-                music = false
-            )
-        )
-
         val DefaultAndroidMusic = Context(
             client = Client(
                 clientId = 21,
@@ -251,10 +190,8 @@ val validCountryCodes =
 object UserAgents {
     const val DESKTOP =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36"
-    const val ANDROID = "com.google.android.youtube/19.44.38 (Linux; U; Android 11) gzip"
     const val ANDROID_MUSIC =
         "com.google.android.apps.youtube.music/7.27.52 (Linux; U; Android 11) gzip"
-    const val PLAYSTATION = "Mozilla/5.0 (PlayStation 4 5.55) AppleWebKit/601.2 (KHTML, like Gecko)"
     const val IOS = "com.google.ios.youtube/20.03.02 (iPhone16,2; U; CPU iOS 18_2_1 like Mac OS X;)"
     const val TV = "Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version"
 }

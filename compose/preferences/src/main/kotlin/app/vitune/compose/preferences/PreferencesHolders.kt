@@ -14,7 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -73,6 +72,7 @@ data class SharedPreferencesProperty<T : Any>(
  * defaultValue until we are allowed to subscribe to SharedPreferences. Caution: the type of the
  * preference has to be [Stable], otherwise UB will occur.
  */
+@Suppress("unused")
 open class PreferencesHolder(
     application: Application,
     name: String,
@@ -132,8 +132,8 @@ open class PreferencesHolder(
         defaultValue: T,
         name: String? = null
     ) = SharedPreferencesProperty(
-        get = {
-            getString(it, null)
+        get = { key ->
+            getString(key, null)
                 ?.let { runCatching { enumValueOf<T>(it) }.getOrNull() }
                 ?: defaultValue
         },

@@ -20,7 +20,8 @@ fun Innertube.SongItem.Companion.from(renderer: MusicResponsiveListItemRenderer)
                     endpoint = it.navigationEndpoint.endpoint as NavigationEndpoint.Endpoint.Watch
                 ) else null
             },
-        authors = renderer
+        // This inspection is not true
+        authors = @Suppress("FilterIsInstanceResultIsAlwaysEmpty") renderer
             .flexColumns
             .getOrNull(1)
             ?.musicResponsiveListItemFlexColumnRenderer

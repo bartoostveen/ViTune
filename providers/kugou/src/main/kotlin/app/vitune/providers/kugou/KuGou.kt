@@ -16,9 +16,9 @@ import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import io.ktor.http.encodeURLParameter
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.util.decodeBase64String
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlin.io.encoding.Base64
 
 object KuGou {
     @OptIn(ExperimentalSerializationApi::class)
@@ -84,37 +84,57 @@ object KuGou {
         null
     }
 
-    private suspend fun downloadLyrics(id: Long, accessKey: String) = client.get("/download") {
-        parameter("ver", 1)
-        parameter("man", "yes")
-        parameter("client", "pc")
-        parameter("fmt", "lrc")
-        parameter("id", id)
-        parameter("accesskey", accessKey)
-    }.body<DownloadLyricsResponse>().content.decodeBase64String().let(KuGou::Lyrics)
+    private suspend fun downloadLyrics(id: Long, accessKey: String) = client
+        .get("/download") {
+            parameter("ver", 1)
+            parameter("man", "yes")
+            parameter("client", "pc")
+            parameter("fmt", "lrc")
+            parameter("id", id)
+            parameter("accesskey", accessKey)
+        }
+        .body<DownloadLyricsResponse>()
+        .content
+        .let { Base64.decode(it).decodeToString() }
+        .let(KuGou::Lyrics)
 
-    private suspend fun searchLyricsByHash(hash: String) = client.get("/search") {
-        parameter("ver", 1)
-        parameter("man", "yes")
-        parameter("client", "mobi")
-        parameter("hash", hash)
-    }.body<SearchLyricsResponse>().candidates
+    private suspend fun searchLyricsByHash(hash: String) = client
+        .get("/search") {
+            parameter("ver", 1)
+            parameter("man", "yes")
+            parameter("client", "mobi")
+            parameter("hash", hash)
+        }
+        .body<SearchLyricsResponse>()
+        .candidates
 
-    private suspend fun searchLyricsByKeyword(keyword: String) = client.get("/search") {
-        parameter("ver", 1)
-        parameter("man", "yes")
-        parameter("client", "mobi")
-        url.encodedParameters.append("keyword", keyword.encodeURLParameter(spaceToPlus = false))
-    }.body<SearchLyricsResponse>().candidates
+    private suspend fun searchLyricsByKeyword(keyword: String) = client
+        .get("/search") {
+            parameter("ver", 1)
+            parameter("man", "yes")
+            parameter("client", "mobi")
+            url.encodedParameters.append(
+                name = "keyword",
+                value = keyword.encodeURLParameter(spaceToPlus = false)
+            )
+        }
+        .body<SearchLyricsResponse>()
+        .candidates
 
-    private suspend fun searchSong(keyword: String) =
-        client.get("https://mobileservice.kugou.com/api/v3/search/song") {
+    private suspend fun searchSong(keyword: String) = client
+        .get("https://mobileservice.kugou.com/api/v3/search/song") {
             parameter("version", 9108)
             parameter("plat", 0)
             parameter("pagesize", 8)
             parameter("showtype", 0)
-            url.encodedParameters.append("keyword", keyword.encodeURLParameter(spaceToPlus = false))
-        }.body<SearchSongResponse>().data.info
+            url.encodedParameters.append(
+                name = "keyword",
+                value = keyword.encodeURLParameter(spaceToPlus = false)
+            )
+        }
+        .body<SearchSongResponse>()
+        .data
+        .info
 
     private fun keyword(artist: String, title: String): String {
         val (newTitle, featuring) = title.extract(" (feat. ", ')')

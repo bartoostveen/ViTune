@@ -18,9 +18,11 @@ import android.provider.MediaStore.Audio.Media._ID
 import app.vitune.core.ui.utils.isAtLeastAndroid10
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import androidx.core.net.toUri
 
 typealias CursorAccessor<T> = ReadOnlyProperty<Any?, T>
 
+@Suppress("unused")
 abstract class CursorDao(private val cursor: Cursor) {
     private val mutableProjection = mutableListOf<String>()
     val projection get() = mutableProjection.toTypedArray()
@@ -81,6 +83,7 @@ abstract class CursorDao(private val cursor: Cursor) {
 }
 
 abstract class CursorDaoCompanion<T : CursorDao> {
+    @Suppress("unused")
     enum class SortOrder(val sql: String) {
         Ascending("ASC"),
         Descending("DESC")
@@ -139,7 +142,7 @@ object NoOpCursor : Cursor {
     override fun getType(columnIndex: Int) = Cursor.FIELD_TYPE_NULL
     override fun isNull(columnIndex: Int) = true
 
-    @Deprecated("Deprecated in Java", ReplaceWith("Unit"))
+    @Deprecated("Deprecated in Java", ReplaceWith(""))
     override fun deactivate() = Unit
 
     @Deprecated("Deprecated in Java", ReplaceWith("false"))
@@ -160,7 +163,7 @@ object NoOpCursor : Cursor {
 
 class AudioMediaCursor(cursor: Cursor) : CursorDao(cursor) {
     companion object : CursorDaoCompanion<AudioMediaCursor>() {
-        val ALBUM_URI_BASE: Uri = Uri.parse("content://media/external/audio/albumart")
+        val ALBUM_URI_BASE: Uri = "content://media/external/audio/albumart".toUri()
 
         override fun order(order: SortOrder) = "$DISPLAY_NAME ${order.sql}"
         override fun new(cursor: Cursor) = AudioMediaCursor(cursor)

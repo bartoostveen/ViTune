@@ -1,5 +1,4 @@
 plugins {
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.library)
 }
 
@@ -9,10 +8,6 @@ android {
 
     defaultConfig {
         minSdk = 21
-    }
-
-    sourceSets.all {
-        kotlin.srcDir("src/$name/kotlin")
     }
 }
 

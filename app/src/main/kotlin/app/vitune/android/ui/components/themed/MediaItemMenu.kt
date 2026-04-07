@@ -733,14 +733,16 @@ fun MediaItemMenu(
                 }
             )
 
+            val errorMsg = stringResource(R.string.youtube_music_not_installed)
             if (!isLocal) MenuEntry(
                 icon = R.drawable.musical_notes,
                 text = stringResource(R.string.open_in_youtube_music),
                 onClick = {
                     onDismiss()
                     binder?.player?.pause()
-                    if (!launchYouTubeMusic(context, "watch?v=${mediaItem.mediaId}"))
-                        context.toast(context.getString(R.string.youtube_music_not_installed))
+                    if (!launchYouTubeMusic(context, "watch?v=${mediaItem.mediaId}")) {
+                        context.toast(errorMsg)
+                    }
                 }
             )
 

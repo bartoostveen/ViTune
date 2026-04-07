@@ -1,25 +1,24 @@
 [versions]
-kotlin = "2.3.0"
+kotlin = "2.3.20"
 ksp = "2.3.4"
 
 #noinspection UnusedVersionCatalogEntry
-jvm = "23"
-agp = "8.13.2"
+jvm = "25"
+agp = "9.1.0"
 
 room = "2.8.4"
-media3 = "1.9.1"
-ktor = "3.4.0"
+media3 = "1.10.0"
+ktor = "3.4.2"
 detekt = "1.23.8"
-workmanager = "2.11.1"
+workmanager = "2.11.2"
 credentials = "1.5.0"
-coil = "3.3.0"
+coil = "3.4.0"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
 android_library = { id = "com.android.library", version.ref = "agp" }
 android_lint = { id = "com.android.lint", version.ref = "agp" }
 kotlin_jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin_android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin_compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin_parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
@@ -28,13 +27,13 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 chaquo = { id = "com.chaquo.python", version = "17.0.0" }
 
 [libraries]
-core_ktx = { module = "androidx.core:core-ktx", version = "1.17.0" }
+core_ktx = { module = "androidx.core:core-ktx", version = "1.18.0" }
 
 kotlin_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
 kotlin_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.7.1" }
 kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.4.0" }
 
-compose_bom = { module = "androidx.compose:compose-bom", version = "2026.01.01" }
+compose_bom = { module = "androidx.compose:compose-bom", version = "2026.03.01" }
 compose_animation = { module = "androidx.compose.animation:animation" }
 compose_foundation = { module = "androidx.compose.foundation:foundation" }
 compose_ui = { module = "androidx.compose.ui:ui" }
@@ -42,7 +41,7 @@ compose_ui_util = { module = "androidx.compose.ui:ui-util" }
 compose_ui_fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 compose_material3 = { module = "androidx.compose.material3:material3" }
 
-compose_activity = { module = "androidx.activity:activity-compose", version = "1.12.3" }
+compose_activity = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.3.3" }
 compose_lottie = { module = "com.airbnb.android:lottie-compose", version = "6.7.1" }
 
@@ -74,7 +73,7 @@ ktor_client_encoding = { module = "io.ktor:ktor-client-encoding", version.ref = 
 ktor_client_serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
 ktor_serialization_json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
-log4j = { module = "org.apache.logging.log4j:log4j-api", version = "2.25.3" }
+log4j = { module = "org.apache.logging.log4j:log4j-api", version = "2.25.4" }
 slf4j = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
 logback = { module = "com.github.tony19:logback-android", version = "3.0.0" }
 

@@ -75,7 +75,9 @@ class Route2<P0, P1>(override val tag: String) : Route() {
         )
     }
 
+    @Suppress("unused") // not true
     fun global(p0: P0, p1: P1) = global(arrayOf(p0, p1))
+    @Suppress("unused") // not true
     suspend fun ensureGlobal(p0: P0, p1: P1) = ensureGlobal(arrayOf(p0, p1))
 }
 
@@ -91,7 +93,9 @@ class Route3<P0, P1, P2>(override val tag: String) : Route() {
         )
     }
 
+    @Suppress("unused") // not true
     fun global(p0: P0, p1: P1, p2: P2) = global(arrayOf(p0, p1, p2))
+    @Suppress("unused") // not true
     suspend fun ensureGlobal(p0: P0, p1: P1, p2: P2) = ensureGlobal(arrayOf(p0, p1, p2))
 }
 

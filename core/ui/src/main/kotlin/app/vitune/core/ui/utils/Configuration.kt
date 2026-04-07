@@ -31,7 +31,7 @@ inline val isAtLeastAndroid8
 
 @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.P)
 inline val isAtLeastAndroid9
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
 
 @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
 inline val isAtLeastAndroid10

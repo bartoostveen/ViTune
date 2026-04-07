@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
@@ -92,6 +91,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        resValues = true
     }
 
     compileOptions {
@@ -152,7 +152,6 @@ kotlin {
 
         freeCompilerArgs.addAll(
             "-Xcontext-parameters",
-            "-Xnon-local-break-continue",
             "-Xconsistent-data-class-copy-visibility"
         )
     }
@@ -174,7 +173,7 @@ chaquopy {
     defaultConfig {
         version = "3.14"
         pip {
-            install("yt-dlp>=2026.01.29")
+            install("yt-dlp>=2026.03.17")
             install("yt-dlp-ejs")
             install("pip")
         }

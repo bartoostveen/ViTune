@@ -43,6 +43,7 @@ object DataPreferences : GlobalPreferencesHolder() {
         LastInteraction(displayName = { stringResource(R.string.last_interaction) })
     }
 
+    @Suppress("unused")
     enum class VersionCheckPeriod(
         val displayName: @Composable () -> String,
         val period: Duration?

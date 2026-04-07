@@ -539,6 +539,7 @@ fun Lyrics(
                                         }
                                     )
 
+                                    val errorMsg = stringResource(R.string.no_browser_installed)
                                     MenuEntry(
                                         icon = R.drawable.search,
                                         text = stringResource(R.string.search_lyrics_online),
@@ -556,7 +557,7 @@ fun Lyrics(
                                                     }
                                                 )
                                             } catch (_: ActivityNotFoundException) {
-                                                context.toast(context.getString(R.string.no_browser_installed))
+                                                context.toast(errorMsg)
                                             }
                                         }
                                     )

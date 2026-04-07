@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.database.getFloatOrNull
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaLibraryInfo
 import androidx.media3.common.util.UnstableApi
 import androidx.room.AutoMigration
 import androidx.room.Dao
@@ -1092,7 +1093,6 @@ abstract class DatabaseInitializer protected constructor() : RoomDatabase() {
     }
 }
 
-@Suppress("unused")
 @TypeConverters
 object Converters {
     @TypeConverter
@@ -1105,20 +1105,22 @@ object Converters {
             val bundle = parcel.readBundle(MediaItem::class.java.classLoader)
             parcel.recycle()
 
-            bundle?.let(MediaItem::fromBundle)
+            bundle?.let { MediaItem.fromBundle(it, MediaLibraryInfo.INTERFACE_VERSION) }
         }.getOrNull()
     }
 
     @TypeConverter
     @OptIn(UnstableApi::class)
-    fun mediaItemToByteArray(mediaItem: MediaItem?): ByteArray? = mediaItem?.toBundle()?.let {
-        val parcel = Parcel.obtain()
-        parcel.writeBundle(it)
-        val bytes = parcel.marshall()
-        parcel.recycle()
+    fun mediaItemToByteArray(mediaItem: MediaItem?): ByteArray? = mediaItem
+        ?.toBundle(MediaLibraryInfo.INTERFACE_VERSION)
+        ?.let {
+            val parcel = Parcel.obtain()
+            parcel.writeBundle(it)
+            val bytes = parcel.marshall()
+            parcel.recycle()
 
-        bytes
-    }
+            bytes
+        }
 
     @TypeConverter
     fun urlToString(url: Url) = url.toString()

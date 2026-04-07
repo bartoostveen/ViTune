@@ -29,5 +29,4 @@ fun <T> persistList(tag: String): MutableState<ImmutableList<T>> =
     persist(tag = tag, initialValue = persistentListOf())
 
 @Composable
-fun <T : Any?> persist(tag: String): MutableState<T?> =
-    persist(tag = tag, initialValue = null)
+fun <T> persist(tag: String): MutableState<T?> = persist(tag = tag, initialValue = null)

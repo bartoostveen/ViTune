@@ -59,6 +59,7 @@ data class Release(
         val updatedAt: SerializableIso8601Date,
         val uploader: SimpleUser? = null
     ) {
+        @Suppress("unused")
         @Serializable
         enum class State {
             @SerialName("uploaded")

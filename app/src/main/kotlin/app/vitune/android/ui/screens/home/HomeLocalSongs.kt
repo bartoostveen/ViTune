@@ -112,7 +112,7 @@ fun HomeLocalSongs(onSearchClick: () -> Unit) = with(OrderPreferences) {
                 onClick = {
                     context.startActivity(
                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            setData(Uri.fromParts("package", context.packageName, null))
+                            data = Uri.fromParts("package", context.packageName, null)
                         }
                     )
                 }

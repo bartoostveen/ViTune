@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package app.vitune.core.ui.utils
 
 import android.annotation.SuppressLint

@@ -69,6 +69,7 @@ object PlayerPreferences : GlobalPreferencesHolder() {
         Wavy(displayName = { stringResource(R.string.wavy_seek_bar_name) })
     }
 
+    @Suppress("unused")
     enum class WavySeekBarQuality(
         val quality: Float,
         val displayName: @Composable () -> String
@@ -84,6 +85,7 @@ object PlayerPreferences : GlobalPreferencesHolder() {
         )
     }
 
+    @Suppress("unused")
     enum class Reverb(
         val preset: Short,
         val displayName: @Composable () -> String

@@ -2,7 +2,6 @@ package app.vitune.android.service
 
 import android.content.ComponentName
 import android.content.ContentResolver
-import android.content.Context
 import android.content.ServiceConnection
 import android.media.session.MediaSession
 import android.net.Uri
@@ -12,7 +11,6 @@ import android.service.media.MediaBrowserService
 import androidx.annotation.DrawableRes
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import androidx.media3.common.util.UnstableApi
 import app.vitune.android.Database
 import app.vitune.android.R
@@ -37,6 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.util.stream.IntStream
 import android.media.MediaDescription as BrowserMediaDescription
 import android.media.browse.MediaBrowser.MediaItem as BrowserMediaItem
 
@@ -69,10 +68,10 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         clientUid: Int,
         rootHints: Bundle?
     ) = if (callValidator.canCall(clientPackageName, clientUid)) {
-        bindService(intent<PlayerService>(), this, Context.BIND_AUTO_CREATE)
+        bindService(intent<PlayerService>(), this, BIND_AUTO_CREATE)
         BrowserRoot(
             MediaId.ROOT.id,
-            bundleOf("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT" to 1)
+            Bundle().apply { putInt("android.media.browse.CONTENT_STYLE_BROWSABLE_HINT", 1) }
         )
     } else null
 
@@ -367,5 +366,7 @@ class PlayerMediaBrowserService : MediaBrowserService(), ServiceConnection {
         }
 
         operator fun div(other: String) = MediaId("$id/$other")
+        override fun chars(): IntStream = id.chars()
+        override fun codePoints(): IntStream = id.codePoints()
     }
 }

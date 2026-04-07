@@ -66,8 +66,8 @@ class GlyphInterface(context: Context) : AutoCloseable {
     }
 
     private val manager by lazy {
-        GlyphManager.getInstance(context.applicationContext).takeIf {
-            runCatching { it.init(callback) }.also {
+        GlyphManager.getInstance(context.applicationContext).takeIf { manager ->
+            runCatching { manager.init(callback) }.also {
                 it.exceptionOrNull()?.printStackTrace()
             }.isSuccess
         }

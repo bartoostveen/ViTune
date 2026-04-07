@@ -32,8 +32,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import app.vitune.android.Database
-import app.vitune.android.DatabaseInitializer
+import app.vitune.android.DatabaseDependency
 import app.vitune.android.Dependencies
 import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
@@ -62,8 +63,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
-import androidx.core.net.toUri
-import app.vitune.android.DatabaseDependency
 
 @SuppressLint("BatteryLife")
 @Route
@@ -216,6 +215,7 @@ fun OtherSettings() {
                 text = stringResource(R.string.service_lifetime_warning_android_12)
             )
 
+            val errorMsg = stringResource(R.string.no_battery_optimization_settings_found)
             SettingsEntry(
                 title = stringResource(R.string.ignore_battery_optimizations),
                 text = if (isIgnoringBatteryOptimizations) stringResource(R.string.ignoring_battery_optimizations)
@@ -233,7 +233,7 @@ fun OtherSettings() {
                         try {
                             activityResultLauncher.launch(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
                         } catch (_: ActivityNotFoundException) {
-                            context.toast(context.getString(R.string.no_battery_optimization_settings_found))
+                            context.toast(errorMsg)
                         }
                     }
                 },

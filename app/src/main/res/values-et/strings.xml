@@ -251,7 +251,7 @@
     <string name="ignoring_battery_optimizations">Piirang on juba eemaldatud</string>
     <string name="ignore_battery_optimizations_action">Keela taustpiirangud</string>
     <string name="invincible_service">Invincible service</string>
-    <string name="invincible_service_description">Peaks hoidma esitust käimas 99.99% ajast, juhul kui aku optimeerimise keelamine ei ole piisav</string>
+    <string name="invincible_service_description">Peaks hoidma esitust käimas 99.99\% ajast, juhul kui aku optimeerimise keelamine ei ole piisav</string>
     <string name="need_help">Vajad abi?</string>
     <string name="need_help_description">Enamasti ei ole arendaja süü (isegi kui "Invincible service" on sisse lülitatud), et rakendus ei tööta taustal korralikult.\nKontrolli, kas sinu seadme tootja lõpetab sinu rakendused (kliki suunamiseks)</string>
     <string name="service_lifetime_report_issue">Kui sa tõeliselt arvad, et rakenduses endas on probleem, vaata "Teave" sektsiooni</string>

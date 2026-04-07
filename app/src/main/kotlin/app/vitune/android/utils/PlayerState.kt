@@ -29,6 +29,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import androidx.compose.ui.res.stringResource
 
 @JvmInline
 value class PlayerScope internal constructor(val player: Player)
@@ -163,6 +164,7 @@ fun rememberEqualizerLauncher(
     val context = LocalContext.current
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+    val errorMsg = stringResource(R.string.no_equalizer_installed)
 
     return rememberUpdatedState {
         try {
@@ -175,8 +177,8 @@ fun rememberEqualizerLauncher(
                     }
                 )
             )
-        } catch (e: ActivityNotFoundException) {
-            context.toast(context.getString(R.string.no_equalizer_installed))
+        } catch (_: ActivityNotFoundException) {
+            context.toast(errorMsg)
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.core.graphics.ColorUtils
 @Suppress("NOTHING_TO_INLINE")
 @JvmInline
 value class Hsl(@PublishedApi internal val raw: FloatArray) {
+    @Suppress("unused") // not unused
     object Saver : androidx.compose.runtime.saveable.Saver<Hsl, FloatArray> {
         override fun restore(value: FloatArray) = value.hsl
         override fun SaverScope.save(value: Hsl) = value.raw

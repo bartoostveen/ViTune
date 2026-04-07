@@ -9,11 +9,14 @@ import androidx.credentials.GetPasswordOption
 import androidx.credentials.PasswordCredential
 import androidx.credentials.exceptions.CreateCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.newCoroutineContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.concurrent.CancellationException
@@ -26,6 +29,7 @@ private val coroutineScope = CoroutineScope(
     executor.asCoroutineDispatcher() + SupervisorJob() + CoroutineName("androidx-credentials-util")
 )
 
+@Suppress("CoroutineContextWithJob") // SupervisorJob is intentional here
 private suspend inline fun <T> wrapper(
     crossinline block: (cont: CancellableContinuation<T>) -> Unit
 ): T = withContext(coroutineScope.coroutineContext) {
@@ -44,14 +48,18 @@ private suspend inline fun <T> wrapper(
 }
 
 private inline fun <
-    reified Response : Any,
+    reified Response,
     reified Exception : Throwable,
     reified CancellationException : Exception
     > callback(
-    cont: CancellableContinuation<Response>
+    cont: CancellableContinuation<Response?>
 ) = object : CredentialManagerCallback<Response, Exception> {
     override fun onError(e: Exception) {
-        if (e is CancellationException) cont.cancel(e) else cont.resumeWithException(e)
+        when (e) {
+            is CancellationException -> cont.cancel(e)
+            is NoCredentialException -> cont.resume(null)
+            else -> cont.resumeWithException(e)
+        }
     }
 
     override fun onResult(result: Response) = cont.resume(result)
@@ -82,4 +90,4 @@ suspend fun CredentialManager.get(context: Context) = wrapper { cont ->
         executor = executor,
         callback = callback<_, _, GetCredentialCancellationException>(cont)
     )
-}.let { runCatching { it.credential as? PasswordCredential }.getOrNull() }
+}.let { runCatching { it?.credential as? PasswordCredential }.getOrNull() }

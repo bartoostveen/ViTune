@@ -118,4 +118,4 @@ operator fun Timeline.get(
     index: Int,
     window: Timeline.Window = Timeline.Window(),
     positionProjection: Duration = Duration.ZERO
-) = getWindow(index, window, positionProjection.inWholeMicroseconds)
+): Timeline.Window = getWindow(index, window, positionProjection.inWholeMicroseconds)

@@ -58,6 +58,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
+import androidx.core.net.toUri
 
 private val VERSION_NAME = BuildConfig.VERSION_NAME.substringBeforeLast("-")
 private const val REPO_OWNER = "25huizengek1"
@@ -116,22 +117,18 @@ class VersionCheckWorker(
                     .setSmallIcon(R.drawable.download)
                     .setContentTitle(getString(R.string.new_version_available))
                     .setContentText(getString(R.string.redirect_github))
-                    .setContentIntent(
-                        pendingIntent(
-                            Intent(
-                                /* action = */ Intent.ACTION_VIEW,
-                                /* uri = */ Uri.parse(release.frontendUrl.toString())
-                            )
-                        )
-                    )
-                    .setAutoCancel(true)
                     .also {
+                        runCatching { release.frontendUrl.toString().toUri() }.getOrNull()
+                            ?.let { url ->
+                                it.setContentIntent(pendingIntent(Intent(Intent.ACTION_VIEW, url)))
+                            }
                         it.setStyle(
                             NotificationCompat
                                 .BigTextStyle(it)
                                 .bigText(getString(R.string.new_version_available))
                         )
                     }
+                    .setAutoCancel(true)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
             }
         }

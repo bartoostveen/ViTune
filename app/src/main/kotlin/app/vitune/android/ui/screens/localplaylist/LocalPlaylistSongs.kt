@@ -222,6 +222,8 @@ fun LocalPlaylistSongs(
                                                         }
                                                     )
 
+                                                    val errorMessage =
+                                                        stringResource(R.string.youtube_music_not_installed)
                                                     MenuEntry(
                                                         icon = R.drawable.musical_notes,
                                                         text = stringResource(R.string.open_in_youtube_music),
@@ -235,9 +237,9 @@ fun LocalPlaylistSongs(
                                                                         playlist.browseId.drop(2)
                                                                     }"
                                                                 )
-                                                            ) context.toast(
-                                                                context.getString(R.string.youtube_music_not_installed)
-                                                            )
+                                                            ) {
+                                                                context.toast(errorMessage)
+                                                            }
                                                         }
                                                     )
                                                 }

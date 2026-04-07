@@ -139,6 +139,8 @@ fun DatabaseSettings() = with(DataPreferences) {
             title = stringResource(R.string.backup),
             description = stringResource(R.string.backup_description)
         ) {
+            val errorMsg = stringResource(R.string.no_file_chooser_installed)
+
             SettingsEntry(
                 title = stringResource(R.string.backup),
                 text = stringResource(R.string.backup_action_description),
@@ -147,8 +149,8 @@ fun DatabaseSettings() = with(DataPreferences) {
 
                     try {
                         backupLauncher.launch("ViTune_backup_${dateFormat.format(Date())}.db")
-                    } catch (e: ActivityNotFoundException) {
-                        context.toast(context.getString(R.string.no_file_chooser_installed))
+                    } catch (_: ActivityNotFoundException) {
+                        context.toast(errorMsg)
                     }
                 }
             )
@@ -158,6 +160,8 @@ fun DatabaseSettings() = with(DataPreferences) {
             description = stringResource(R.string.restore_warning),
             important = true
         ) {
+            val errorMsg = stringResource(R.string.no_file_chooser_installed)
+
             SettingsEntry(
                 title = stringResource(R.string.restore),
                 text = stringResource(R.string.restore_description),
@@ -170,8 +174,8 @@ fun DatabaseSettings() = with(DataPreferences) {
                                 "application/octet-stream"
                             )
                         )
-                    } catch (e: ActivityNotFoundException) {
-                        context.toast(context.getString(R.string.no_file_chooser_installed))
+                    } catch (_: ActivityNotFoundException) {
+                        context.toast(errorMsg)
                     }
                 }
             )

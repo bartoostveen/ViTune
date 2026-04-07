@@ -110,9 +110,7 @@ object LrcLib {
     data class Lyrics(
         val text: String,
         val synced: Boolean
-    ) {
-        fun asLrc() = LrcParser.parse(text)?.toLrcFile()
-    }
+    )
 }
 
 object LrcParser {
@@ -176,6 +174,7 @@ object LrcParser {
         }.handleError(logging).getOrDefault(Line.Invalid)
     }.takeIf { lrc -> lrc.isNotEmpty() && !lrc.all { it == Line.Invalid } }
 
+    @Suppress("unused")
     data class LrcFile(
         val metadata: Map<String, String>,
         val lines: Map<Long, String>,

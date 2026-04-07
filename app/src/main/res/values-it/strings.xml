@@ -329,7 +329,7 @@
     <string name="bass_boost">Potenziamento bassi</string>
     <string name="bass_boost_description">Potenzia le basse frequenze per migliorare l\'esperienza di ascolto</string>
     <string name="bass_boost_level">Livello potenziamento bassi</string>
-    <string name="bass_boost_level_description">Livello (0-1000) di potenziamento delle basse frequenze; usa a tuo rischio!</string>
+    <string name="bass_boost_level_description">Livello (0–1000) di potenziamento delle basse frequenze; usa a tuo rischio!</string>
     <string name="sponsor_block">Sponsorblock</string>
     <string name="sponsor_block_description">Blocca contenuti sponsorizzati/fuori tema utilizzando i dati dall\'API Sponsorblock</string>
     <string name="reverb">Riverbero</string>
