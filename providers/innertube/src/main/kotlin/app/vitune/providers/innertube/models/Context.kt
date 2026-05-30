@@ -4,7 +4,6 @@ import io.ktor.client.request.headers
 import io.ktor.http.HttpMessageBuilder
 import io.ktor.http.parameters
 import io.ktor.http.userAgent
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
