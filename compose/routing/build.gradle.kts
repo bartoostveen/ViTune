@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "app.vitune.compose.routing"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 21

@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.google.android.material"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 21

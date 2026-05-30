@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "app.vitune.compose.reordering"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 21

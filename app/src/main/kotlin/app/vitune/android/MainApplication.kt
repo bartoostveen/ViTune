@@ -108,6 +108,7 @@ import app.vitune.core.ui.rippleConfiguration
 import app.vitune.core.ui.shimmerTheme
 import app.vitune.core.ui.utils.activityIntentBundle
 import app.vitune.core.ui.utils.isAtLeastAndroid12
+import app.vitune.core.ui.utils.isAtLeastAndroid17
 import app.vitune.core.ui.utils.songBundle
 import app.vitune.providers.innertube.Innertube
 import app.vitune.providers.innertube.models.bodies.BrowseBody
@@ -515,6 +516,10 @@ class MainApplication : Application(), SingletonImageLoader.Factory, Configurati
             VmPolicy.Builder()
                 .let {
                     if (isAtLeastAndroid12) it.detectUnsafeIntentLaunch()
+                    else it
+                }
+                .let {
+                    if (isAtLeastAndroid17) it.detectImplicitUriPermissionGrant()
                     else it
                 }
                 .penaltyLog()

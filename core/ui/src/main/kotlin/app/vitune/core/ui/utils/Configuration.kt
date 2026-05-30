@@ -49,6 +49,10 @@ inline val isAtLeastAndroid12
 inline val isAtLeastAndroid13
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
+@get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CINNAMON_BUN)
+inline val isAtLeastAndroid17
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN
+
 @Composable
 fun isCompositionLaunched(): Boolean {
     var isLaunched by remember { mutableStateOf(false) }
