@@ -182,7 +182,7 @@
     <string name="thumbnail_roundness_heavy">Heavy</string>
     <string name="thumbnail_roundness_heavier">Even heavier</string>
     <string name="thumbnail_roundness_heaviest">Heaviest</string>
-    <string name="navigation_rail_position">Navigation bar position</string>
+    <string name="navigation_rail_position">Navigation rail position</string>
     <string name="navigation_rail_position_left">Left</string>
     <string name="navigation_rail_position_right">Right</string>
     <string name="text">Text</string>

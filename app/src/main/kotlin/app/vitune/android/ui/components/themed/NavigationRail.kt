@@ -199,10 +199,11 @@ inline fun NavigationRail(
     val isLandscape = isLandscape
 
     // Apply the inset on whichever side the rail is docked against, so it never collides with the
-    // system bars / display cutout when moved to the right.
+    // system bars / display cutout when moved to the right. Absolute Left/Right sides are used
+    // (rather than Start/End) so the physical edge is correct regardless of layout direction.
     val horizontalInsetSide = when (position) {
-        NavigationRailPosition.Left -> WindowInsetsSides.Start
-        NavigationRailPosition.Right -> WindowInsetsSides.End
+        NavigationRailPosition.Left -> WindowInsetsSides.Left
+        NavigationRailPosition.Right -> WindowInsetsSides.Right
     }
 
     val paddingValues = LocalPlayerAwareWindowInsets.current
