@@ -3,6 +3,7 @@ package app.vitune.android.preferences
 import app.vitune.android.GlobalPreferencesHolder
 import app.vitune.android.preferences.OldPreferences.ColorPaletteMode
 import app.vitune.android.preferences.OldPreferences.ColorPaletteName
+import app.vitune.core.data.enums.NavigationRailPosition
 import app.vitune.core.ui.BuiltInFontFamily
 import app.vitune.core.ui.ColorMode
 import app.vitune.core.ui.ColorSource
@@ -32,6 +33,7 @@ object AppearancePreferences : GlobalPreferencesHolder() {
         }
     )
     var thumbnailRoundness by enum(ThumbnailRoundness.Medium)
+    var navigationRailPosition by enum(NavigationRailPosition.Left)
     var fontFamily by enum(BuiltInFontFamily.Poppins)
     var applyFontPadding by boolean(false)
     val isShowingThumbnailInLockscreenProperty = boolean(true)

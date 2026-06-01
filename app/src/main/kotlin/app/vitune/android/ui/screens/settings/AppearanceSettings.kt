@@ -18,6 +18,7 @@ import app.vitune.android.ui.screens.Route
 import app.vitune.android.utils.currentLocale
 import app.vitune.android.utils.findActivity
 import app.vitune.android.utils.startLanguagePicker
+import app.vitune.core.data.enums.NavigationRailPosition
 import app.vitune.core.ui.BuiltInFontFamily
 import app.vitune.core.ui.ColorMode
 import app.vitune.core.ui.ColorSource
@@ -77,6 +78,14 @@ fun AppearanceSettings() = with(AppearancePreferences) {
                             .size(36.dp)
                     )
                 },
+                valueText = { it.nameLocalized }
+            )
+        }
+        SettingsGroup(title = stringResource(R.string.layout)) {
+            EnumValueSelectorSettingsEntry(
+                title = stringResource(R.string.navigation_rail_position),
+                selectedValue = navigationRailPosition,
+                onValueSelect = { navigationRailPosition = it },
                 valueText = { it.nameLocalized }
             )
         }
@@ -273,5 +282,13 @@ val ThumbnailRoundness.nameLocalized
             ThumbnailRoundness.Heavy -> R.string.thumbnail_roundness_heavy
             ThumbnailRoundness.Heavier -> R.string.thumbnail_roundness_heavier
             ThumbnailRoundness.Heaviest -> R.string.thumbnail_roundness_heaviest
+        }
+    )
+
+val NavigationRailPosition.nameLocalized
+    @Composable get() = stringResource(
+        when (this) {
+            NavigationRailPosition.Left -> R.string.navigation_rail_position_left
+            NavigationRailPosition.Right -> R.string.navigation_rail_position_right
         }
     )

@@ -56,6 +56,7 @@ import app.vitune.android.ui.screens.settings.SwitchSettingsEntry
 import app.vitune.android.utils.center
 import app.vitune.android.utils.color
 import app.vitune.android.utils.semiBold
+import app.vitune.core.data.enums.NavigationRailPosition
 import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.core.ui.utils.isLandscape
@@ -189,6 +190,7 @@ inline fun NavigationRail(
     crossinline setHiddenTabs: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
     tabsEditingTitle: String = stringResource(R.string.tabs),
+    position: NavigationRailPosition = NavigationRailPosition.Left,
     crossinline content: TabsBuilder.() -> Unit
 ) {
     val (colorPalette, typography) = LocalAppearance.current
@@ -196,8 +198,15 @@ inline fun NavigationRail(
     val tabs = TabsBuilder.rememberTabs(content)
     val isLandscape = isLandscape
 
+    // Apply the inset on whichever side the rail is docked against, so it never collides with the
+    // system bars / display cutout when moved to the right.
+    val horizontalInsetSide = when (position) {
+        NavigationRailPosition.Left -> WindowInsetsSides.Start
+        NavigationRailPosition.Right -> WindowInsetsSides.End
+    }
+
     val paddingValues = LocalPlayerAwareWindowInsets.current
-        .only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+        .only(WindowInsetsSides.Vertical + horizontalInsetSide)
         .asPaddingValues()
 
     var editing by remember { mutableStateOf(false) }

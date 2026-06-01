@@ -38,6 +38,7 @@
     <string name="appearance">Appearance</string>
     <string name="colors">Colors</string>
     <string name="shapes">Shapes</string>
+    <string name="layout">Layout</string>
     <string name="skip_back">Skip back</string>
     <string name="skip_forward">Skip forward</string>
     <string name="play">Play</string>
@@ -181,6 +182,9 @@
     <string name="thumbnail_roundness_heavy">Heavy</string>
     <string name="thumbnail_roundness_heavier">Even heavier</string>
     <string name="thumbnail_roundness_heaviest">Heaviest</string>
+    <string name="navigation_rail_position">Navigation bar position</string>
+    <string name="navigation_rail_position_left">Left</string>
+    <string name="navigation_rail_position_right">Right</string>
     <string name="text">Text</string>
     <string name="font">Font</string>
     <string name="use_system_font">Use system font</string>
