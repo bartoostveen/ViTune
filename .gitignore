@@ -16,3 +16,8 @@ local.properties
 
 .quickjs_cache/
 jniLibs/
+
+/.envrc
+/.direnv
+/result*
+/repl-result*
