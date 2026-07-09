@@ -82,8 +82,6 @@ fun AlbumScreen(browseId: String) {
                 album = currentAlbum
                 songs = currentSongs.toImmutableList()
 
-                if (currentAlbum?.timestamp != null && currentSongs.isNotEmpty()) return@combine
-
                 withContext(Dispatchers.IO) {
                     Innertube.albumPage(BrowseBody(browseId = browseId))
                         ?.completed()
