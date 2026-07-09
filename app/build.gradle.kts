@@ -151,7 +151,6 @@ kotlin {
         languageVersion.set(KotlinVersion.KOTLIN_2_5)
 
         freeCompilerArgs.addAll(
-            "-Xcontext-parameters",
             "-Xconsistent-data-class-copy-visibility"
         )
     }
