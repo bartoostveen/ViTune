@@ -1,0 +1,3 @@
+* Stability fixes
+* Medium-severity security fixes
+* Fixed an edge-case where ViTune would not update an album's songs
