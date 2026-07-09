@@ -11,6 +11,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.util.generateNonce
+import io.ktor.util.generateNonceSuspend
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 
@@ -23,7 +24,7 @@ private suspend fun Innertube.tryContexts(
         if (!currentCoroutineContext().isActive) return null
 
         logger.info("Trying ${context.client.clientName} ${context.client.clientVersion} ${context.client.platform}")
-        val cpn = generateNonce(16).decodeToString()
+        val cpn = generateNonceSuspend(16)
         runCatchingCancellable {
             client.post(if (context.client.music) PLAYER_MUSIC else PLAYER) {
                 setBody(
@@ -35,7 +36,7 @@ private suspend fun Innertube.tryContexts(
 
                 context.apply()
 
-                parameter("t", generateNonce(12))
+                parameter("t", generateNonceSuspend(12))
                 header("X-Goog-Api-Format-Version", "2")
                 parameter("id", body.videoId)
             }.body<PlayerResponse>().also { logger.info("Got $it") }
