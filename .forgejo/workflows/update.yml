@@ -1,0 +1,60 @@
+"on":
+  schedule:
+    - cron: 0 0 * * 0
+  workflow_dispatch: {}
+jobs:
+  nix-flake-update:
+    runs-on: [gpg, native-x86_64-linux]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-home@85c04dfa32da72ea8d9d9058601121a7194672fa
+        with:
+          gpg-privkey: ${{ secrets.GPG_PRIVKEY }}
+          gpg-key-id: ${{ vars.GPG_KEY_ID }}
+      - name: nix flake update
+        run: nix flake update --commit-lock-file
+      - name: send PR
+        run: |
+          base="$(git branch --show-current)"
+          if [[ "$(git rev-list origin/"$base"..HEAD --count)" -ne 0 ]]; then
+            head="ci-flake-update"
+
+            git switch -c "$head"
+            git push --force origin "$head"
+
+            existing_prs="$(
+              curl --silent --fail-with-body \
+                -H "Authorization: token $FORGEJO_TOKEN" \
+                "$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/pulls?state=open"
+            )"
+
+            if jq -e --arg head "$head" 'any(.[]; .head.ref == $head)' <<< "$existing_prs" > /dev/null; then
+              echo "PR for branch '$head' already exists, exiting."
+              exit 0
+            fi
+
+            commit_subject="$(git log -1 --pretty=%s)"
+            commit_body="$(git log -1 --pretty=%b)"
+
+            pr_body="$commit_subject"
+
+            if [[ -n "$commit_body" ]]; then
+              pr_body="$(printf '%s\n\n```\n%s\n```' "$pr_body" "$commit_body")"
+            fi
+
+            jq -n \
+              --arg base "$base" \
+              --arg head "$head" \
+              --arg title "$commit_subject" \
+              --arg body "$pr_body" \
+              '{
+                base: $base,
+                head: $head,
+                title: $title,
+                body: $body
+              }' |
+            curl --fail-with-body "$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/pulls" \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data @-
+          fi
