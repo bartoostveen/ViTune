@@ -252,11 +252,14 @@ fun Thumbnail(
                             stringResource(R.string.error_network)
 
                         is PlayableFormatNotFoundException -> stringResource(R.string.error_unplayable)
+
                         is UnplayableException -> stringResource(R.string.error_source_deleted)
+
                         is LoginRequiredException, is RestrictedVideoException ->
                             stringResource(R.string.error_server_restrictions)
 
                         is VideoIdMismatchException -> stringResource(R.string.error_id_mismatch)
+
                         else -> stringResource(R.string.error_unknown_playback)
                     }
                 },

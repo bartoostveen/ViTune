@@ -13,17 +13,15 @@ data class Runs(
     val text: String
         get() = runs.joinToString("") { it.text.orEmpty() }
 
-    fun splitBySeparator(): List<List<Run>> {
-        return runs.flatMapIndexed { index, run ->
-            when {
-                index == 0 || index == runs.lastIndex -> listOf(index)
-                run.text == SEPARATOR -> listOf(index - 1, index + 1)
-                else -> emptyList()
-            }
-        }.windowed(size = 2, step = 2) { (from, to) -> runs.slice(from..to) }.let {
-            it.ifEmpty {
-                listOf(runs)
-            }
+    fun splitBySeparator() = runs.flatMapIndexed { index, run ->
+        when {
+            index == 0 || index == runs.lastIndex -> listOf(index)
+            run.text == SEPARATOR -> listOf(index - 1, index + 1)
+            else -> emptyList()
+        }
+    }.windowed(size = 2, step = 2) { (from, to) -> runs.slice(from..to) }.let {
+        it.ifEmpty {
+            listOf(runs)
         }
     }
 

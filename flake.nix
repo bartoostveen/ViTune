@@ -24,9 +24,20 @@
       ];
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, system, ... }:
 
         {
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system;
+            allowUnfree = true;
+            overlays = [
+              (final: _prev: {
+                jdk = final.openjdk25;
+                gradle = final.gradle_9;
+                python = final.python314;
+              })
+            ];
+          };
           treefmt = {
             programs.nixfmt.enable = true;
             programs.keep-sorted.enable = true;
@@ -34,9 +45,16 @@
           };
 
           devShells.default = pkgs.mkShell {
-            packages = [
-              pkgs.openjdk25
+            packages = with pkgs; [
+              jdk
+              gradle
+              python
             ];
+
+            env = {
+              JAVA_HOME = pkgs.jdk.home;
+              GRADLE_JAVA_HOME = pkgs.jdk.home;
+            };
           };
         };
     };

@@ -141,9 +141,11 @@ private fun RouteHandler(
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val parameters = rememberSaveable { arrayOfNulls<Any?>(4) }
 
-    if (listenToGlobalEmitter && child == null) OnGlobalRoute { (route, args) ->
-        args.forEachIndexed(parameters::set)
-        setChild(route)
+    if (listenToGlobalEmitter && child == null) {
+        OnGlobalRoute { (route, args) ->
+            args.forEachIndexed(parameters::set)
+            setChild(route)
+        }
     }
 
     var predictiveBackProgress: Float? by remember { mutableStateOf(null) }
@@ -170,13 +172,17 @@ private fun RouteHandler(
 
     val transitionState = remember { SeekableTransitionState(child) }
 
-    if (predictiveBackProgress == null) LaunchedEffect(child) {
-        if (transitionState.currentState != child) transitionState.animateTo(child)
-    } else LaunchedEffect(predictiveBackProgress) {
-        transitionState.seekTo(
-            fraction = predictiveBackProgress ?: 0f,
-            targetState = null
-        )
+    if (predictiveBackProgress == null) {
+        LaunchedEffect(child) {
+            if (transitionState.currentState != child) transitionState.animateTo(child)
+        }
+    } else {
+        LaunchedEffect(predictiveBackProgress) {
+            transitionState.seekTo(
+                fraction = predictiveBackProgress ?: 0f,
+                targetState = null
+            )
+        }
     }
 
     rememberTransition(

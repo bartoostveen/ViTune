@@ -10,6 +10,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 
+@Suppress("ModifierComposed") // TODO
 context(scope: LazyItemScope)
 fun Modifier.animateItemPlacement(reorderingState: ReorderingState) = composed {
     var suppress by remember { mutableStateOf(false) }

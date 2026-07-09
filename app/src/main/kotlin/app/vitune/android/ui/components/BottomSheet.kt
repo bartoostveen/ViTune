@@ -80,30 +80,34 @@ fun BottomSheet(
             )
         }
 ) {
-    if (state.value > state.collapsedBound) CallbackPredictiveBackHandler(
-        enabled = !state.collapsing && backHandlerEnabled,
-        onStart = { },
-        onProgress = { state.collapse(progress = it) },
-        onFinish = { state.collapseSoft() },
-        onCancel = { state.expandSoft() }
-    )
+    if (state.value > state.collapsedBound) {
+        CallbackPredictiveBackHandler(
+            enabled = !state.collapsing && backHandlerEnabled,
+            onStart = { },
+            onProgress = { state.collapse(progress = it) },
+            onFinish = { state.collapseSoft() },
+            onCancel = { state.expandSoft() }
+        )
+    }
     if (!state.dismissed && !state.collapsed) content()
 
-    if (!state.expanded && (onDismiss == null || !state.dismissed)) Box(
-        modifier = Modifier
-            .graphicsLayer {
-                alpha = 1f - (state.progress * 16).coerceAtMost(1f)
-            }
-            .fillMaxWidth()
-            .height(state.collapsedBound)
-    ) {
-        collapsedContent(
-            Modifier.clickable(
-                onClick = state::expandSoft,
-                indication = indication,
-                interactionSource = remember { MutableInteractionSource() }
+    if (!state.expanded && (onDismiss == null || !state.dismissed)) {
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    alpha = 1f - (state.progress * 16).coerceAtMost(1f)
+                }
+                .fillMaxWidth()
+                .height(state.collapsedBound)
+        ) {
+            collapsedContent(
+                Modifier.clickable(
+                    onClick = state::expandSoft,
+                    indication = indication,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
             )
-        )
+        }
     }
 }
 
@@ -181,11 +185,14 @@ internal constructor(
 
     fun fling(velocity: Float, onDismiss: (() -> Unit)?) = when {
         velocity > 250 -> expand()
+
         velocity < -250 -> {
             if (value < collapsedBound && onDismiss != null) {
                 dismiss()
                 onDismiss()
-            } else collapse()
+            } else {
+                collapse()
+            }
         }
 
         else -> {
@@ -197,10 +204,13 @@ internal constructor(
                     if (onDismiss != null) {
                         dismiss()
                         onDismiss()
-                    } else collapse()
+                    } else {
+                        collapse()
+                    }
                 }
 
                 in l1..l2 -> collapse()
+
                 in l2..expandedBound -> expand()
 
                 else -> Unit
@@ -218,7 +228,9 @@ internal constructor(
                 return if (isTopReached && available.y < 0 && source == NestedScrollSource.UserInput) {
                     dispatchRawDelta(available.y)
                     available
-                } else Offset.Zero
+                } else {
+                    Offset.Zero
+                }
             }
 
             override fun onPostScroll(
@@ -231,7 +243,9 @@ internal constructor(
                 return if (isTopReached && source == NestedScrollSource.UserInput) {
                     dispatchRawDelta(available.y)
                     available
-                } else Offset.Zero
+                } else {
+                    Offset.Zero
+                }
             }
 
             override suspend fun onPreFling(available: Velocity) = if (isTopReached) {
@@ -239,7 +253,9 @@ internal constructor(
                 fling(velocity, null)
 
                 available
-            } else Velocity.Zero
+            } else {
+                Velocity.Zero
+            }
 
             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
                 isTopReached = false

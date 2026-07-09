@@ -71,6 +71,7 @@ abstract class InvincibleService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 Intent.ACTION_SCREEN_ON -> handler.post(this)
+
                 Intent.ACTION_SCREEN_OFF -> {
                     handler.removeCallbacks(this)
                     startForeground()

@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.3.21"
+kotlin = "2.4.0"
 ksp = "2.3.4"
 
 #noinspection UnusedVersionCatalogEntry
@@ -8,11 +8,11 @@ agp = "9.2.1"
 
 room = "2.8.4"
 media3 = "1.10.1"
-ktor = "3.5.0"
-detekt = "1.23.8"
+ktor = "3.5.1"
+detekt = "2.0.0-alpha.5"
 workmanager = "2.11.2"
 credentials = "1.6.0"
-coil = "3.4.0"
+coil = "3.5.0"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
@@ -23,17 +23,17 @@ kotlin_serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 kotlin_compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin_parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 chaquo = { id = "com.chaquo.python", version = "17.0.0" }
 
 [libraries]
-core_ktx = { module = "androidx.core:core-ktx", version = "1.18.0" }
+core_ktx = { module = "androidx.core:core-ktx", version = "1.19.0" }
 
 kotlin_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.11.0" }
 kotlin_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.8.0" }
-kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.4.0" }
+kotlin_immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.5.1" }
 
-compose_bom = { module = "androidx.compose:compose-bom", version = "2026.05.01" }
+compose_bom = { module = "androidx.compose:compose-bom", version = "2026.06.01" }
 compose_animation = { module = "androidx.compose.animation:animation" }
 compose_foundation = { module = "androidx.compose.foundation:foundation" }
 compose_ui = { module = "androidx.compose.ui:ui" }
@@ -75,7 +75,7 @@ ktor_client_encoding = { module = "io.ktor:ktor-client-encoding", version.ref = 
 ktor_client_serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
 ktor_serialization_json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
-log4j = { module = "org.apache.logging.log4j:log4j-api", version = "2.26.0" }
+log4j = { module = "org.apache.logging.log4j:log4j-api", version = "2.26.1" }
 slf4j = { module = "org.slf4j:slf4j-api", version = "2.0.18" }
 logback = { module = "com.github.tony19:logback-android", version = "3.0.0" }
 
@@ -85,5 +85,5 @@ monet = { module = "com.github.KieronQuinn:MonetCompat", version = "0.4.1" }
 
 desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 
-detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.5.9" }
-detekt_formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
+detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.6.2" }
+detekt_formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detekt" }

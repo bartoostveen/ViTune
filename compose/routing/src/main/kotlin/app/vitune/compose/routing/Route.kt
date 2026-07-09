@@ -30,7 +30,7 @@ sealed class Route : Parcelable {
     )
 
     protected suspend fun ensureGlobal(args: Array<Any?>) {
-        globalRouteFlow.subscriptionCount.filter { it > 0 }.first()
+        globalRouteFlow.subscriptionCount.first { it > 0 }
         globalRouteFlow.emit(
             RouteRequest(
                 route = this,
@@ -42,8 +42,8 @@ sealed class Route : Parcelable {
 
 @Immutable
 class Route0(override val tag: String) : Route() {
-    context(scope: RouteHandlerScope)
     @Composable
+    context(scope: RouteHandlerScope)
     operator fun invoke(content: @Composable () -> Unit) {
         if (this == scope.child) content()
     }
@@ -54,8 +54,8 @@ class Route0(override val tag: String) : Route() {
 
 @Immutable
 class Route1<P0>(override val tag: String) : Route() {
-    context(scope: RouteHandlerScope)
     @Composable
+    context(scope: RouteHandlerScope)
     operator fun invoke(content: @Composable (P0) -> Unit) {
         if (this == scope.child) content(scope.args[0] as P0)
     }
@@ -66,8 +66,8 @@ class Route1<P0>(override val tag: String) : Route() {
 
 @Immutable
 class Route2<P0, P1>(override val tag: String) : Route() {
-    context(scope: RouteHandlerScope)
     @Composable
+    context(scope: RouteHandlerScope)
     operator fun invoke(content: @Composable (P0, P1) -> Unit) {
         if (this == scope.child) content(
             scope.args[0] as P0,
@@ -84,8 +84,8 @@ class Route2<P0, P1>(override val tag: String) : Route() {
 
 @Immutable
 class Route3<P0, P1, P2>(override val tag: String) : Route() {
-    context(scope: RouteHandlerScope)
     @Composable
+    context(scope: RouteHandlerScope)
     operator fun invoke(content: @Composable (P0, P1, P2) -> Unit) {
         if (this == scope.child) content(
             scope.args[0] as P0,
@@ -103,8 +103,8 @@ class Route3<P0, P1, P2>(override val tag: String) : Route() {
 
 @Immutable
 class Route4<P0, P1, P2, P3>(override val tag: String) : Route() {
-    context(scope: RouteHandlerScope)
     @Composable
+    context(scope: RouteHandlerScope)
     operator fun invoke(content: @Composable (P0, P1, P2, P3) -> Unit) {
         if (this == scope.child) content(
             scope.args[0] as P0,

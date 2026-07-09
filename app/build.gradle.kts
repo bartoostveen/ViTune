@@ -173,8 +173,8 @@ chaquopy {
     defaultConfig {
         version = "3.14"
         pip {
-            install("yt-dlp>=2026.06.09")
-            install("yt-dlp-ejs")
+            install("yt-dlp>=2026.07.04")
+            install("yt-dlp-ejs>=0.8.0")
             install("pip")
         }
     }
@@ -237,7 +237,4 @@ dependencies {
     implementation(projects.providers.translate)
     implementation(projects.core.data)
     implementation(projects.core.ui)
-
-    detektPlugins(libs.detekt.compose)
-    detektPlugins(libs.detekt.formatting)
 }

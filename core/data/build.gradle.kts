@@ -27,7 +27,4 @@ dependencies {
     implementation(libs.core.ktx)
 
     api(libs.kotlin.datetime)
-
-    detektPlugins(libs.detekt.compose)
-    detektPlugins(libs.detekt.formatting)
 }

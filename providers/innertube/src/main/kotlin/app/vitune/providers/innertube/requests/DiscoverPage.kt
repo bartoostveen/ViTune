@@ -74,7 +74,8 @@ suspend fun Innertube.discoverPage() = runCatchingCancellable {
                     ?.toBrowseItem(Innertube.SongItem::from)
                     ?.items
                     ?.filterIsInstance<Innertube.SongItem>()
-                    ?.map { song -> // Why, YouTube, why
+                    ?.map { song ->
+                        // Why, YouTube, why
                         song.copy(
                             authors = song.authors?.firstOrNull()?.let { listOf(it) } ?: emptyList()
                         )

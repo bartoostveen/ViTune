@@ -132,7 +132,9 @@ fun BuiltInPlaylistSongs(
                 Header(
                     title = when (builtInPlaylist) {
                         BuiltInPlaylist.Favorites -> stringResource(R.string.favorites)
+
                         BuiltInPlaylist.Offline -> stringResource(R.string.offline)
+
                         BuiltInPlaylist.Top -> stringResource(
                             R.string.format_my_top_playlist,
                             topListLength

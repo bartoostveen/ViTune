@@ -26,10 +26,10 @@ import app.vitune.android.LocalPlayerServiceBinder
 import app.vitune.android.R
 import app.vitune.android.service.PlayerService
 import app.vitune.core.ui.utils.EqualizerIntentBundleAccessor
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 @JvmInline
 value class PlayerScope internal constructor(val player: Player)
@@ -47,8 +47,10 @@ fun Player?.DisposableListener(
 
             addListener(listener)
             listener.onMediaItemTransition(
-                /* mediaItem = */ currentMediaItem,
-                /* reason = */ Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+                /* mediaItem = */
+                currentMediaItem,
+                /* reason = */
+                Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
             )
             onDispose { removeListener(listener) }
         } ?: onDispose { }
@@ -139,13 +141,19 @@ fun playingSong(
 
     binder?.player.DisposableListener {
         object : Player.Listener {
-            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            override fun onPlayWhenReadyChanged(
+                playWhenReady: Boolean,
+                reason: Int
+            ) {
                 super.onPlayWhenReadyChanged(playWhenReady, reason)
 
                 playing = playWhenReady
             }
 
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            override fun onMediaItemTransition(
+                mediaItem: MediaItem?,
+                reason: Int
+            ) {
                 super.onMediaItemTransition(mediaItem, reason)
 
                 id = mediaItem?.mediaId

@@ -1,4 +1,4 @@
-import io.gitlab.arturbosch.detekt.Detekt
+import dev.detekt.gradle.Detekt
 
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
@@ -13,15 +13,19 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-val clean by tasks.registering(Delete::class) {
+tasks.register<Delete>("clean") {
+    description = "Clean all build files"
+
     delete(rootProject.layout.buildDirectory.asFile)
 }
+
+val topLevelLibs = libs
 
 allprojects {
     group = "app.vitune"
     version = "1.2.1"
 
-    apply(plugin = "io.gitlab.arturbosch.detekt")
+    apply(plugin = "dev.detekt")
 
     detekt {
         buildUponDefaultConfig = true
@@ -30,14 +34,18 @@ allprojects {
     }
 
     tasks.withType<Detekt>().configureEach {
-        jvmTarget = "22"
+        jvmTarget = "25"
         reports {
             html.required = true
         }
+    }
+
+    dependencies {
+        detektPlugins(topLevelLibs.detekt.compose)
+        detektPlugins(topLevelLibs.detekt.formatting)
     }
 }
 
 tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
     languageVersion = JavaLanguageVersion.of(25)
-    vendor = JvmVendorSpec.ORACLE
 }

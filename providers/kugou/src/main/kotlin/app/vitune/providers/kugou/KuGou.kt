@@ -166,32 +166,34 @@ object KuGou {
 
             val text = value.replace("\r\n", "\n").trim()
 
-            for (line in text.lineSequence()) when {
-                line.startsWith("[ti:") ||
-                    line.startsWith("[ar:") ||
-                    line.startsWith("[al:") ||
-                    line.startsWith("[by:") ||
-                    line.startsWith("[hash:") ||
-                    line.startsWith("[sign:") ||
-                    line.startsWith("[qq:") ||
-                    line.startsWith("[total:") ||
-                    line.startsWith("[offset:") ||
-                    line.startsWith("[id:") ||
-                    line.containsAt("]Written by：", 9) ||
-                    line.containsAt("]Lyrics by：", 9) ||
-                    line.containsAt("]Composed by：", 9) ||
-                    line.containsAt("]Producer：", 9) ||
-                    line.containsAt("]作曲 : ", 9) ||
-                    line.containsAt("]作词 : ", 9) -> {
-                    toDrop += line.length + 1 + maybeToDrop
-                    maybeToDrop = 0
-                }
+            for (line in text.lineSequence()) {
+                when {
+                    line.startsWith("[ti:") ||
+                        line.startsWith("[ar:") ||
+                        line.startsWith("[al:") ||
+                        line.startsWith("[by:") ||
+                        line.startsWith("[hash:") ||
+                        line.startsWith("[sign:") ||
+                        line.startsWith("[qq:") ||
+                        line.startsWith("[total:") ||
+                        line.startsWith("[offset:") ||
+                        line.startsWith("[id:") ||
+                        line.containsAt("]Written by：", 9) ||
+                        line.containsAt("]Lyrics by：", 9) ||
+                        line.containsAt("]Composed by：", 9) ||
+                        line.containsAt("]Producer：", 9) ||
+                        line.containsAt("]作曲 : ", 9) ||
+                        line.containsAt("]作词 : ", 9) -> {
+                        toDrop += line.length + 1 + maybeToDrop
+                        maybeToDrop = 0
+                    }
 
-                maybeToDrop == 0 -> maybeToDrop = line.length + 1
+                    maybeToDrop == 0 -> maybeToDrop = line.length + 1
 
-                else -> {
-                    maybeToDrop = 0
-                    break
+                    else -> {
+                        maybeToDrop = 0
+                        break
+                    }
                 }
             }
 

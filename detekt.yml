@@ -65,7 +65,7 @@ complexity:
     active: false
   NestedBlockDepth:
     active: true
-    threshold: 6
+    allowedDepth: 6
   TooManyFunctions:
     excludes:
       - '**/util/**'
@@ -76,14 +76,18 @@ exceptions:
     ignoredExceptionTypes:
       - ActivityNotFoundException
 
-formatting:
+ktlint:
   AnnotationOnSeparateLine:
     active: false
   CommentWrapping:
     # Because argument names in comment are a thing: Java API's do not support named arguments
     active: false
+  ClassSignature:
+    active: false
   EnumEntryNameCase:
     active: false # Handled by Android Lint
+  FunctionSignature:
+    active: false
   MultiLineIfElse:
     active: false
   NoUnusedImports:

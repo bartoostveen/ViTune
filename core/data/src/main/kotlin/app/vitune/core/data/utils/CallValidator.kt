@@ -96,8 +96,8 @@ value class Whitelist(private val map: WhitelistMap = mapOf()) {
         private fun MutableMap<String, Set<Key>>.putV2Tag(parser: XmlResourceParser) =
             runCatching {
                 val pak = parser.getAttributeValue(
-                    /* namespace = */ null,
-                    /* name = */ "package"
+                    /* p0 = */ null,
+                    /* p1 = */ "package"
                 )
                 val keys = buildSet {
                     var event = parser.next()
@@ -138,4 +138,4 @@ value class Whitelist(private val map: WhitelistMap = mapOf()) {
 
 typealias WhitelistMap = Map<String, Set<Whitelist.Key>>
 
-private val WHITESPACE_REGEX = "\\s|\\n".toRegex()
+private val WHITESPACE_REGEX = "[\\s\\n]".toRegex()

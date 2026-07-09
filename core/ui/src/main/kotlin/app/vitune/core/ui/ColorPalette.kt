@@ -165,6 +165,7 @@ fun accentColorOf(
     sampleBitmap: Bitmap?
 ) = when (source) {
     ColorSource.Default -> defaultAccentColor
+
     ColorSource.Dynamic -> sampleBitmap?.let { dynamicAccentColorOf(it, isDark) }
         ?: defaultAccentColor
 

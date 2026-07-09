@@ -26,7 +26,10 @@ class GridSnapLayoutInfoProvider(
     private val lazyGridState: LazyGridState,
     private val positionInLayout: PositionInLayout = PositionInLayout.Default
 ) : SnapLayoutInfoProvider {
-    override fun calculateApproachOffset(velocity: Float, decayOffset: Float) = 0f
+    override fun calculateApproachOffset(
+        velocity: Float,
+        decayOffset: Float
+    ) = 0f
 
     override fun calculateSnapOffset(velocity: Float): Float {
         var lowerBoundOffset = Float.NEGATIVE_INFINITY

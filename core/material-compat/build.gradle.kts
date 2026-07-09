@@ -13,9 +13,6 @@ android {
 
 dependencies {
     implementation(projects.core.ui)
-
-    detektPlugins(libs.detekt.compose)
-    detektPlugins(libs.detekt.formatting)
 }
 
 kotlin {

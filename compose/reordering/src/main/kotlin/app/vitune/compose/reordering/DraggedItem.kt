@@ -20,6 +20,7 @@ fun Modifier.draggedItem(
     draggedElevation: Dp = 4.dp
 ): Modifier = when (reorderingState.draggingIndex) {
     -1 -> this
+
     index -> offset {
         when (reorderingState.lazyListState.layoutInfo.orientation) {
             Orientation.Vertical -> IntOffset(0, reorderingState.offset.value)

@@ -46,18 +46,27 @@ private fun logError(throwable: Throwable) = Log.e("PipHandler", "An error occur
 @Suppress("DEPRECATION")
 fun Activity.maybeEnterPip() = when {
     !isAtLeastAndroid7 -> false
+
     !packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE) -> false
+
     else -> runCatching {
-        if (isAtLeastAndroid8) enterPictureInPictureMode(PictureInPictureParams.Builder().build())
-        else enterPictureInPictureMode()
+        if (isAtLeastAndroid8) {
+            enterPictureInPictureMode(PictureInPictureParams.Builder().build())
+        } else {
+            enterPictureInPictureMode()
+        }
     }.onFailure(::logError).isSuccess
 }
 
-fun Activity.setAutoEnterPip(autoEnterIfPossible: Boolean) = if (isAtLeastAndroid12) setPictureInPictureParams(
-    PictureInPictureParams.Builder()
-        .setAutoEnterEnabled(autoEnterIfPossible)
-        .build()
-) else Unit
+fun Activity.setAutoEnterPip(autoEnterIfPossible: Boolean) = if (isAtLeastAndroid12) {
+    setPictureInPictureParams(
+        PictureInPictureParams.Builder()
+            .setAutoEnterEnabled(autoEnterIfPossible)
+            .build()
+    )
+} else {
+    Unit
+}
 
 fun Activity.setPipParams(
     rect: Rect,
@@ -66,24 +75,31 @@ fun Activity.setPipParams(
     autoEnterIfPossible: Boolean = AppearancePreferences.autoPip,
     block: PictureInPictureParams.Builder.() -> PictureInPictureParams.Builder = { this }
 ) {
-    if (isAtLeastAndroid8) setPictureInPictureParams(
-        PictureInPictureParams.Builder()
-            .block()
-            .setSourceRectHint(rect)
-            .setAspectRatio(Rational(targetNumerator, targetDenominator))
-            .let {
-                if (isAtLeastAndroid12) it
-                    .setAutoEnterEnabled(autoEnterIfPossible)
-                    .setSeamlessResizeEnabled(false)
-                else it
-            }
-            .build()
-    )
+    if (isAtLeastAndroid8) {
+        setPictureInPictureParams(
+            PictureInPictureParams.Builder()
+                .block()
+                .setSourceRectHint(rect)
+                .setAspectRatio(Rational(targetNumerator, targetDenominator))
+                .let {
+                    if (isAtLeastAndroid12) {
+                        it
+                            .setAutoEnterEnabled(autoEnterIfPossible)
+                            .setSeamlessResizeEnabled(false)
+                    } else {
+                        it
+                    }
+                }
+                .build()
+        )
+    }
 }
 
 fun Activity.maybeExitPip() = when {
     !isAtLeastAndroid7 -> false
+
     !isInPictureInPictureMode -> false
+
     else -> runCatching {
         moveTaskToBack(false)
         application.startActivity(
@@ -153,16 +169,20 @@ fun Modifier.pip(
         targetNumerator = targetNumerator,
         targetDenominator = targetDenominator
     ) {
-        if (actions != null) setActions(
-            actions.all.values.map {
-                RemoteAction(
-                    it.icon ?: Icon.createWithResource(activity, R.drawable.ic_launcher_foreground),
-                    it.title.orEmpty(),
-                    it.contentDescription.orEmpty(),
-                    with(activity) { it.pendingIntent }
-                )
-            }
-        ) else this
+        if (actions != null) {
+            setActions(
+                actions.all.values.map {
+                    RemoteAction(
+                        it.icon ?: Icon.createWithResource(activity, R.drawable.ic_launcher_foreground),
+                        it.title.orEmpty(),
+                        it.contentDescription.orEmpty(),
+                        with(activity) { it.pendingIntent }
+                    )
+                }
+            )
+        } else {
+            this
+        }
     }
 }
 
