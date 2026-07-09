@@ -1,7 +1,6 @@
 /.sdk
 *.iml
 .gradle
-gradle/gradle-daemon-jvm.properties
 /local.properties
 .idea
 .DS_Store
