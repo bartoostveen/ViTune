@@ -42,7 +42,7 @@ compose_ui_fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 compose_material3 = { module = "androidx.compose.material3:material3" }
 
 compose_activity = { module = "androidx.activity:activity-compose", version = "1.13.0" }
-compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.4.0" }
+compose_shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version = "1.5.0" }
 compose_lottie = { module = "com.airbnb.android:lottie-compose", version = "6.7.1" }
 
 coil_compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
