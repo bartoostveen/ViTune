@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.4.0"
-ksp = "2.3.9"
+ksp = "2.3.10"
 
 #noinspection UnusedVersionCatalogEntry
 jvm = "25"
