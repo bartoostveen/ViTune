@@ -7,7 +7,7 @@ jobs:
     runs-on: [gpg, native-x86_64-linux]
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-home@85c04dfa32da72ea8d9d9058601121a7194672fa # v1
+      - uses: actions/setup-home@53c4834f1dcf7b3cfdc500335c4c7a3c16c3f92e # v1
         with:
           gpg-privkey: ${{ secrets.GPG_PRIVKEY }}
           gpg-key-id: ${{ vars.GPG_KEY_ID }}
