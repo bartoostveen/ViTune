@@ -4,7 +4,7 @@ ksp = "2.3.10"
 
 #noinspection UnusedVersionCatalogEntry
 jvm = "25"
-agp = "9.2.1"
+agp = "9.3.0"
 
 room = "2.8.4"
 media3 = "1.10.1"
