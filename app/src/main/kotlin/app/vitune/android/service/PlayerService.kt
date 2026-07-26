@@ -1421,16 +1421,30 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     }?.getOrNull()
                     val youtubeFormat = body?.streamingData?.highestQualityFormat
 
-                    val info = runCatching {
-                        Dependencies.runDownload(mediaId)
-                    }.mapCatching {
-                        YouTubeDLResponse.fromString(it)
-                    }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
-                    if (info?.id != mediaId) throw VideoIdMismatchException()
-                    val format = info.formats?.firstOrNull { it.formatId == info.formatId }
+                    var uri: Uri? = runCatching { youtubeFormat?.url?.toUri() }.getOrNull()
+                    var formatItag: Int? = youtubeFormat?.itag
+                    var formatMimeType: String? = youtubeFormat?.mimeType
+                    var formatBitrate: Long? = youtubeFormat?.bitrate
+                    var formatContentLength: Long? = youtubeFormat?.contentLength
 
-                    val uri =
-                        runCatching { info.url?.toUri() }.getOrNull() ?: throw UnplayableException()
+                    if (uri == null) {
+                        val info = runCatching {
+                            Dependencies.runDownload(mediaId)
+                        }.mapCatching {
+                            YouTubeDLResponse.fromString(it)
+                        }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
+
+                        if (info != null) {
+                            if (info.id != mediaId) throw VideoIdMismatchException()
+                            uri = runCatching { info.url?.toUri() }.getOrNull()
+                            val format = info.formats?.firstOrNull { it.formatId == info.formatId }
+                            formatItag = formatItag ?: info.formatId?.toIntOrNull()
+                            formatBitrate = formatBitrate ?: format?.abr?.let { (it * 1000).toLong() }
+                            formatContentLength = formatContentLength ?: info.fileSize
+                        }
+                    }
+
+                    val finalUri = uri ?: throw UnplayableException()
 
                     val mediaItem = runCatching {
                         runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
@@ -1457,11 +1471,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                             Database.insert(
                                 Format(
                                     songId = mediaId,
-                                    itag = info.formatId?.toIntOrNull(),
-                                    mimeType = youtubeFormat?.mimeType,
-                                    bitrate = format?.abr?.let { it * 1000 }?.toLong(),
+                                    itag = formatItag,
+                                    mimeType = formatMimeType,
+                                    bitrate = formatBitrate,
                                     loudnessDb = body?.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                    contentLength = info.fileSize,
+                                    contentLength = formatContentLength,
                                     lastModified = youtubeFormat?.lastModified
                                 )
                             )
@@ -1470,13 +1484,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
                     uriCache.push(
                         key = mediaId,
-                        meta = info.fileSize,
-                        uri = uri
+                        meta = formatContentLength,
+                        uri = finalUri
                     )
 
                     dataSpec
-                        .withUri(uri)
-                        .ranged(info.fileSize)
+                        .withUri(finalUri)
+                        .ranged(formatContentLength)
                 }
             }
         }.handleUnknownErrors {

@@ -38,14 +38,15 @@ data class PlayerResponse(
 
     @Serializable
     data class StreamingData(
-        val adaptiveFormats: List<AdaptiveFormat>?,
-        val expiresInSeconds: Long?
+        val formats: List<AdaptiveFormat>? = null,
+        val adaptiveFormats: List<AdaptiveFormat>? = null,
+        val expiresInSeconds: Long? = null
     ) {
         val highestQualityFormat: AdaptiveFormat?
-            get() = adaptiveFormats?.filter { it.url != null || it.signatureCipher != null }
-                ?.let { formats ->
-                    formats.findLast { it.itag == 251 || it.itag == 140 }
-                        ?: formats.maxBy { it.bitrate ?: 0L }
+            get() = (adaptiveFormats ?: formats)?.filter { it.url != null || it.signatureCipher != null }
+                ?.let { formatsList ->
+                    formatsList.findLast { it.itag == 251 || it.itag == 140 }
+                        ?: formatsList.maxByOrNull { it.bitrate ?: 0L }
                 }
 
         @Serializable

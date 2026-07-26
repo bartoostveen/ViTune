@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.ktor.client.serialization)
     implementation(libs.ktor.serialization.json)
     implementation(libs.log4j)
+    testImplementation(libs.junit)
 }
 
 kotlin {
