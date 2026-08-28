@@ -12,7 +12,7 @@ ktor = "3.5.2"
 detekt = "2.0.0-alpha.6"
 workmanager = "2.11.2"
 credentials = "1.6.0"
-coil = "3.5.0"
+coil = "3.6.0"
 
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
