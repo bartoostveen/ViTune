@@ -151,6 +151,8 @@ class StreamCandidateDataSourceFactory(
                 } catch (e: IOException) {
                     lastError = e
 
+                    Log.w(TAG, "Stream candidate failed for $mediaId, trying next: $e")
+
                     source?.close()
 
                     val now = System.currentTimeMillis()
