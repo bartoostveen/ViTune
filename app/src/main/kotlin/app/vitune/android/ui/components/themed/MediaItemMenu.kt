@@ -728,7 +728,7 @@ fun MediaItemMenu(
                 text = stringResource(R.string.watch_on_youtube),
                 onClick = {
                     onDismiss()
-                    binder?.player?.pause()
+                    binder?.userPause()
                     uriHandler.openUri("https://youtube.com/watch?v=${mediaItem.mediaId}")
                 }
             )
@@ -739,7 +739,7 @@ fun MediaItemMenu(
                 text = stringResource(R.string.open_in_youtube_music),
                 onClick = {
                     onDismiss()
-                    binder?.player?.pause()
+                    binder?.userPause()
                     if (!launchYouTubeMusic(context, "watch?v=${mediaItem.mediaId}")) {
                         context.toast(errorMsg)
                     }

@@ -181,10 +181,10 @@ private fun ClassicControls(
                 modifier = Modifier
                     .clip(playButtonRadius.roundedShape)
                     .clickable {
-                        if (shouldBePlaying) binder.player.pause()
+                        if (shouldBePlaying) binder.userPause()
                         else {
                             if (binder.player.playbackState == Player.STATE_IDLE) binder.player.prepare()
-                            binder.player.play()
+                            binder.userPlay()
                         }
                     }
                     .background(colorPalette.background2)
@@ -345,9 +345,9 @@ private fun PlayButton(
         modifier = modifier
             .clip(radius.roundedShape)
             .clickable {
-                if (shouldBePlaying) binder?.player?.pause() else {
+                if (shouldBePlaying) binder?.userPause() else {
                     if (binder?.player?.playbackState == Player.STATE_IDLE) binder.player.prepare()
-                    binder?.player?.play()
+                    binder?.userPlay()
                 }
             }
             .background(colorPalette.accent)

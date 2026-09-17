@@ -213,7 +213,7 @@ fun LocalPlaylistSongs(
                                                         text = stringResource(R.string.watch_playlist_on_youtube),
                                                         onClick = {
                                                             menuState.hide()
-                                                            binder?.player?.pause()
+                                                            binder?.userPause()
                                                             uriHandler.openUri(
                                                                 "https://youtube.com/watch?v=$firstSongId&list=${
                                                                     playlist.browseId.drop(2)
@@ -229,7 +229,7 @@ fun LocalPlaylistSongs(
                                                         text = stringResource(R.string.open_in_youtube_music),
                                                         onClick = {
                                                             menuState.hide()
-                                                            binder?.player?.pause()
+                                                            binder?.userPause()
                                                             if (
                                                                 !launchYouTubeMusic(
                                                                     context = context,

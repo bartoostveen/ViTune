@@ -311,10 +311,10 @@ fun Player(
                         modifier = Modifier
                             .clickable(
                                 onClick = {
-                                    if (shouldBePlaying) binder?.player?.pause()
+                                    if (shouldBePlaying) binder?.userPause()
                                     else {
                                         if (binder?.player?.playbackState == Player.STATE_IDLE) binder.player.prepare()
-                                        binder?.player?.play()
+                                        binder?.userPlay()
                                     }
                                 },
                                 indication = ripple(bounded = false),

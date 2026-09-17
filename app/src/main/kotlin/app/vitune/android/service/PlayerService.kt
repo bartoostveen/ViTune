@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.format.DateUtils
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -242,6 +243,20 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     private var bassBoost: BassBoost? = null
     private var reverb: PresetReverb? = null
 
+    private val stallWatchdogTickMs = 10_000L
+    private val stallMinProgressMs = 2_000L
+    private val maxStallRecoveries = 3
+    private val recentlyPlayingWindowMs = 60_000L
+    private val externalPauseGraceMs = 15_000L
+
+    private var userInitiatedPause = false
+    private var lastPlayingAt = 0L
+    private var lastSampledPosition = -1L
+    private var lastSampledAt = 0L
+    private var stallRecoveries = 0
+    private var externalPauseSince = 0L
+    private var lastWatchdogMediaId: String? = null
+
     private val binder = Binder()
 
     private var isNotificationStarted = false
@@ -353,6 +368,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         maybeResumePlaybackWhenDeviceConnected()
 
+        startStallWatchdog()
+
         preferenceUpdaterJob = coroutineScope.launch {
             fun <T : Any> subscribe(
                 prop: SharedPreferencesProperty<T>,
@@ -422,6 +439,15 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) =
         maybeSavePlayerQueue()
+
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        super.onIsPlayingChanged(isPlaying)
+        if (isPlaying) {
+            lastPlayingAt = SystemClock.elapsedRealtime()
+            lastSampledPosition = -1L
+            externalPauseSince = 0L
+        }
+    }
 
     override fun onDestroy() {
         runCatching {
@@ -893,6 +919,84 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         audioManager?.registerAudioDeviceCallback(audioDeviceCallback, handler)
     }
 
+    private fun startStallWatchdog() {
+        coroutineScope.launch {
+            while (true) {
+                delay(stallWatchdogTickMs)
+                withContext(Dispatchers.Main) { checkForStalledPlayback() }
+            }
+        }
+    }
+
+    private fun checkForStalledPlayback() {
+        val mediaId = player.currentMediaItem?.mediaId
+        if (mediaId != lastWatchdogMediaId) {
+            lastWatchdogMediaId = mediaId
+            stallRecoveries = 0
+        }
+
+        val now = SystemClock.elapsedRealtime()
+        when {
+            player.playWhenReady && player.playbackState == Player.STATE_READY -> {
+                externalPauseSince = 0L
+                val position = player.currentPosition
+                if (lastSampledPosition >= 0L) {
+                    val elapsed = now - lastSampledAt
+                    val delta = position - lastSampledPosition
+                    val expectedProgress = (elapsed * player.playbackParameters.speed).toLong()
+                    val minProgress = stallMinProgressMs.coerceAtMost(expectedProgress / 4)
+                    if (elapsed >= stallWatchdogTickMs && delta in -1_000L until minProgress.coerceAtLeast(1L)) {
+                        recoverFromStalledPlayback()
+                    }
+                }
+                lastSampledPosition = position
+                lastSampledAt = now
+            }
+
+            !player.playWhenReady && player.playbackState == Player.STATE_READY -> {
+                val externallyPaused =
+                    !userInitiatedPause &&
+                        !isInAudioCall() &&
+                        lastPlayingAt > 0L &&
+                        now - lastPlayingAt < recentlyPlayingWindowMs
+                if (externallyPaused) {
+                    if (externalPauseSince == 0L) {
+                        externalPauseSince = now
+                    } else if (now - externalPauseSince >= externalPauseGraceMs) {
+                        Log.w("PlayerService", "Resuming after external pause")
+                        externalPauseSince = 0L
+                        player.play()
+                    }
+                } else {
+                    externalPauseSince = 0L
+                }
+            }
+
+            else -> externalPauseSince = 0L
+        }
+    }
+
+    private fun recoverFromStalledPlayback() {
+        if (stallRecoveries >= maxStallRecoveries) return
+        stallRecoveries++
+        Log.w("PlayerService", "Playback stall detected, recovery $stallRecoveries of $maxStallRecoveries")
+        val position = player.currentPosition
+        if (stallRecoveries == 1) {
+            player.seekTo(position)
+        } else {
+            player.pause()
+            player.prepare()
+            player.seekTo(position)
+            player.play()
+        }
+        lastSampledPosition = -1L
+    }
+
+    private fun isInAudioCall(): Boolean {
+        val mode = getSystemService<AudioManager>()?.mode ?: return false
+        return mode == AudioManager.MODE_IN_CALL || mode == AudioManager.MODE_IN_COMMUNICATION
+    }
+
     private fun openEqualizer() =
         EqualizerIntentBundleAccessor.sendOpenEqualizer(player.audioSessionId)
 
@@ -1164,6 +1268,16 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
         fun setBitmapListener(listener: ((Bitmap?) -> Unit)?) = bitmapProvider.setListener(listener)
 
+        fun userPause() {
+            userInitiatedPause = true
+            player.pause()
+        }
+
+        fun userPlay() {
+            userInitiatedPause = false
+            player.play()
+        }
+
         @kotlin.OptIn(FlowPreview::class)
         fun startSleepTimer(delayMillis: Long) {
             timerJob?.cancel()
@@ -1290,12 +1404,21 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     private inner class SessionCallback : MediaSession.Callback() {
-        override fun onPlay() = player.play()
-        override fun onPause() = player.pause()
+        override fun onPlay() {
+            userInitiatedPause = false
+            player.play()
+        }
+        override fun onPause() {
+            userInitiatedPause = true
+            player.pause()
+        }
         override fun onSkipToPrevious() = runCatching(player::forceSeekToPrevious).let { }
         override fun onSkipToNext() = runCatching(player::forceSeekToNext).let { }
         override fun onSeekTo(pos: Long) = player.seekTo(pos)
-        override fun onStop() = player.pause()
+        override fun onStop() {
+            userInitiatedPause = true
+            player.pause()
+        }
         override fun onRewind() = player.seekToDefaultPosition()
         override fun onSkipToQueueItem(id: Long) =
             runCatching { player.seekToDefaultPosition(id.toInt()) }.let { }
@@ -1321,9 +1444,11 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     inner class NotificationActionReceiver internal constructor() :
         ActionReceiver("app.vitune.android") {
         val pause by action { _, _ ->
+            userInitiatedPause = true
             player.pause()
         }
         val play by action { _, _ ->
+            userInitiatedPause = false
             player.play()
         }
         val next by action { _, _ ->
