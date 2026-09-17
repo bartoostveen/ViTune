@@ -76,11 +76,10 @@ abstract class NotificationChannels {
             context: Context,
             notification: NotificationCompat.Builder.() -> NotificationCompat.Builder
         ) = runCatching {
-            handler.post {
-                upsertChannel(context)
-                val (id, notif) = createNotification(context, notification)
-                s.startForeground(id, notif)
-            }
+            // Synchronous: the FGS start timeout runs from startForegroundService()
+            upsertChannel(context)
+            val (id, notif) = createNotification(context, notification)
+            s.startForeground(id, notif)
         }
 
         fun cancel(

@@ -1071,9 +1071,25 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     override fun startForeground() {
-        notification()
-            ?.let { ServiceNotifications.default.startForeground(this, it) }
+        ServiceNotifications.default.startForeground(
+            this,
+            notification() ?: {
+                this
+                    .setContentTitle(appLabel.toString())
+                    .setSmallIcon(R.drawable.app_icon)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .setShowWhen(false)
+                    .setAutoCancel(false)
+                    .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            }
+        )
     }
+
+    private val appLabel: CharSequence
+        get() = runCatching {
+            packageManager.getApplicationLabel(packageManager.getApplicationInfo(packageName, 0))
+        }.getOrDefault("ViTune")
 
     private fun createMediaSourceFactory() = DefaultMediaSourceFactory(
         /* dataSourceFactory = */
