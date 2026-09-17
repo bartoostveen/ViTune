@@ -26,4 +26,7 @@ dependencies {
     implementation(libs.core.ktx)
 
     api(libs.kotlin.datetime)
+
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

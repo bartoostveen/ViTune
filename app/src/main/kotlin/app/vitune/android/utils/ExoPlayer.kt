@@ -3,6 +3,7 @@
 package app.vitune.android.utils
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.C
@@ -14,9 +15,14 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.datasource.TransferListener
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
+import app.vitune.android.service.isLocal
+import app.vitune.core.data.utils.StreamUrlCache
 import java.io.EOFException
+import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.pow
 
 class RangeHandlerDataSourceFactory(private val parent: DataSource.Factory) : DataSource.Factory {
@@ -112,6 +118,74 @@ fun DataSource.Factory.withFallback(
     context: Context,
     resolver: ResolvingDataSource.Resolver
 ) = withFallback(ResolvingDataSource.Factory(DefaultDataSource.Factory(context), resolver))
+
+class StreamCandidateDataSourceFactory(
+    private val base: DataSource.Factory,
+    private val streamUrlCache: StreamUrlCache
+) : DataSource.Factory {
+    override fun createDataSource() = object : DataSource {
+        private var source: DataSource? = null
+        private val transferListeners = mutableListOf<TransferListener>()
+        private val open = AtomicBoolean(false)
+
+        private fun openSource(dataSpec: DataSpec): Long {
+            val s = base.createDataSource()
+
+            source = s
+            transferListeners.forEach { s.addTransferListener(it) }
+            open.set(true)
+
+            return s.open(dataSpec)
+        }
+
+        override fun open(dataSpec: DataSpec): Long {
+            val mediaId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
+
+            if (mediaId == null || dataSpec.isLocal) return openSource(dataSpec)
+
+            var lastError: IOException? = null
+
+            while (true) {
+                try {
+                    return openSource(dataSpec)
+                } catch (e: IOException) {
+                    lastError = e
+
+                    source?.close()
+
+                    val now = System.currentTimeMillis()
+                    streamUrlCache.current(mediaId, now)?.let { candidate ->
+                        streamUrlCache.markFailed(mediaId, candidate)
+                    }
+
+                    if (streamUrlCache.hasRemaining(mediaId, now)) continue
+
+                    throw lastError
+                }
+            }
+        }
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int) =
+            requireNotNull(source).read(buffer, offset, length)
+
+        override fun addTransferListener(transferListener: TransferListener) {
+            transferListeners += transferListener
+            source?.addTransferListener(transferListener)
+        }
+
+        override fun getResponseHeaders(): Map<String, List<String>> =
+            requireNotNull(source).responseHeaders
+
+        override fun getUri(): Uri? = source?.uri
+
+        override fun close() {
+            if (open.compareAndSet(true, false)) {
+                source?.close()
+                source = null
+            }
+        }
+    }
+}
 
 class RetryingDataSourceFactory(
     private val parent: DataSource.Factory,

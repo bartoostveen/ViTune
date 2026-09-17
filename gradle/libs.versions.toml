@@ -14,6 +14,9 @@ workmanager = "2.11.2"
 credentials = "1.6.0"
 coil = "3.6.2"
 
+junit = "5.12.2"
+junit_platform = "1.12.2"
+
 [plugins]
 android_application = { id = "com.android.application", version.ref = "agp" }
 android_library = { id = "com.android.library", version.ref = "agp" }
@@ -87,3 +90,6 @@ desugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" 
 
 detekt_compose = { module = "io.nlopez.compose.rules:detekt", version = "0.6.6" }
 detekt_formatting = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detekt" }
+
+junit_jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit_platform_launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit_platform" }

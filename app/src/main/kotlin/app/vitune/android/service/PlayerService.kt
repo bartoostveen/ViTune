@@ -80,6 +80,7 @@ import app.vitune.android.utils.ActionReceiver
 import app.vitune.android.utils.ConditionalCacheDataSourceFactory
 import app.vitune.android.utils.GlyphInterface
 import app.vitune.android.utils.InvincibleService
+import app.vitune.android.utils.StreamCandidateDataSourceFactory
 import app.vitune.android.utils.TimerJob
 import app.vitune.android.utils.YouTubeDLResponse
 import app.vitune.android.utils.YouTubeRadio
@@ -105,7 +106,7 @@ import app.vitune.android.utils.timer
 import app.vitune.android.utils.toast
 import app.vitune.compose.preferences.SharedPreferencesProperty
 import app.vitune.core.data.enums.ExoPlayerDiskCacheSize
-import app.vitune.core.data.utils.UriCache
+import app.vitune.core.data.utils.StreamUrlCache
 import app.vitune.core.ui.utils.EqualizerIntentBundleAccessor
 import app.vitune.core.ui.utils.isAtLeastAndroid10
 import app.vitune.core.ui.utils.isAtLeastAndroid12
@@ -1375,112 +1376,146 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             cache: Cache,
             chunkLength: Long? = DEFAULT_CHUNK_LENGTH,
             findMediaItem: suspend (videoId: String) -> MediaItem? = { null },
-            uriCache: UriCache<String, Long?> = UriCache()
-        ): DataSource.Factory = ResolvingDataSource.Factory(
-            ConditionalCacheDataSourceFactory(
-                cacheDataSourceFactory = cache.readOnlyWhen { PlayerPreferences.pauseCache }.asDataSource,
+            streamUrlCache: StreamUrlCache = StreamUrlCache()
+        ): DataSource.Factory {
+            val cacheSource = cache.readOnlyWhen { PlayerPreferences.pauseCache }.asDataSource
+
+            val conditionalCache = ConditionalCacheDataSourceFactory(
+                cacheDataSourceFactory = cacheSource,
                 upstreamDataSourceFactory = context.defaultDataSource,
                 shouldCache = { !it.isLocal }
             )
-        ) { dataSpec ->
-            val mediaId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
-                ?: error("A key must be set")
 
-            fun DataSpec.ranged(contentLength: Long?) = contentLength?.let {
-                if (chunkLength == null) return@let null
+            val resolving = ResolvingDataSource.Factory(conditionalCache) { dataSpec ->
+                val mediaId = dataSpec.key?.removePrefix("https://youtube.com/watch?v=")
+                    ?: error("A key must be set")
 
-                val start = dataSpec.uriPositionOffset
-                val length = (contentLength - start).coerceAtMost(chunkLength)
-                val rangeText = "$start-${start + length}"
+                fun DataSpec.ranged(contentLength: Long?) = contentLength?.let {
+                    if (chunkLength == null) return@let null
 
-                this.subrange(start, length)
-                    .withAdditionalHeaders(mapOf("Range" to "bytes=$rangeText"))
-            } ?: this
+                    val start = dataSpec.uriPositionOffset
+                    val length = (contentLength - start).coerceAtMost(chunkLength)
+                    val rangeText = "$start-${start + length}"
 
-            if (
-                dataSpec.isLocal || (
-                    chunkLength != null && cache.isCached(
-                        /* key = */
-                        mediaId,
-                        /* position = */
-                        dataSpec.position,
-                        /* length = */
-                        chunkLength
-                    )
-                    )
-            ) {
-                dataSpec
-            } else {
-                uriCache[mediaId]?.let { cachedUri ->
+                    this.subrange(start, length)
+                        .withAdditionalHeaders(mapOf("Range" to "bytes=$rangeText"))
+                } ?: this
+
+                if (
+                    dataSpec.isLocal || (
+                        chunkLength != null && cache.isCached(
+                            /* key = */
+                            mediaId,
+                            /* position = */
+                            dataSpec.position,
+                            /* length = */
+                            chunkLength
+                        )
+                        )
+                ) {
                     dataSpec
-                        .withUri(cachedUri.uri)
-                        .ranged(cachedUri.meta)
-                } ?: run {
-                    val body = runBlocking(Dispatchers.IO) {
-                        Innertube.player(PlayerBody(videoId = mediaId))
-                    }?.getOrNull()
-                    val youtubeFormat = body?.streamingData?.highestQualityFormat
+                } else {
+                    streamUrlCache.current(mediaId, System.currentTimeMillis())?.let { candidate ->
+                        dataSpec
+                            .withUri(candidate.uri.toUri())
+                            .ranged(candidate.contentLength)
+                    } ?: run {
+                        val now = System.currentTimeMillis()
 
-                    val info = runCatching {
-                        Dependencies.runDownload(mediaId)
-                    }.mapCatching {
-                        YouTubeDLResponse.fromString(it)
-                    }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
-                    if (info?.id != mediaId) throw VideoIdMismatchException()
-                    val format = info.formats?.firstOrNull { it.formatId == info.formatId }
+                        val body = runBlocking(Dispatchers.IO) {
+                            Innertube.player(PlayerBody(videoId = mediaId))
+                        }?.getOrNull()
+                        val directFormats = body?.streamingData?.adaptiveFormats
+                            ?.filter { it.url != null && it.mimeType.startsWith("audio") }
+                            ?.sortedByDescending { it.bitrate ?: 0L }
+                        val firstDirect = directFormats?.firstOrNull()
 
-                    val uri =
-                        runCatching { info.url?.toUri() }.getOrNull() ?: throw UnplayableException()
+                        val info = runCatching {
+                            Dependencies.runDownload(mediaId)
+                        }.mapCatching {
+                            YouTubeDLResponse.fromString(it)
+                        }.also { it.exceptionOrNull()?.printStackTrace() }.getOrNull()
+                            ?.takeIf { it.id == mediaId }
+                        val format = info?.formats?.firstOrNull { it.formatId == info?.formatId }
 
-                    val mediaItem = runCatching {
-                        runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
-                    }.getOrNull()
+                        val candidates = mutableListOf<StreamUrlCache.Candidate>()
 
-                    val extras = mediaItem?.mediaMetadata?.extras?.songBundle
-                    if (extras?.durationText == null) {
-                        body
-                            ?.streamingData
-                            ?.highestQualityFormat
-                            ?.approxDurationMs
-                            ?.div(1000)
-                            ?.let(DateUtils::formatElapsedTime)
-                            ?.removePrefix("0")
-                            ?.let { durationText ->
-                                extras?.durationText = durationText
-                                Database.updateDurationText(mediaId, durationText)
-                            }
-                    }
-
-                    transaction {
-                        runCatching {
-                            mediaItem?.let(Database::insert)
-                            Database.insert(
-                                Format(
-                                    songId = mediaId,
-                                    itag = info.formatId?.toIntOrNull(),
-                                    mimeType = youtubeFormat?.mimeType,
-                                    bitrate = format?.abr?.let { it * 1000 }?.toLong(),
-                                    loudnessDb = body?.playerConfig?.audioConfig?.normalizedLoudnessDb,
-                                    contentLength = info.fileSize,
-                                    lastModified = youtubeFormat?.lastModified
-                                )
+                        info?.url?.let { url ->
+                            candidates += StreamUrlCache.Candidate(
+                                uri = url,
+                                contentLength = info.fileSize
                             )
                         }
+
+                        directFormats?.forEach { direct ->
+                            candidates += StreamUrlCache.Candidate(
+                                uri = direct.url.orEmpty(),
+                                contentLength = direct.contentLength
+                            )
+                        }
+
+                        if (candidates.isEmpty()) throw UnplayableException()
+
+                        streamUrlCache.put(
+                            mediaId = mediaId,
+                            candidates = candidates,
+                            expiresInSeconds = body?.streamingData?.expiresInSeconds,
+                            now = now
+                        )
+
+                        val metadataFormat = if (info != null) {
+                            body?.streamingData?.highestQualityFormat
+                        } else {
+                            firstDirect
+                        }
+
+                        val mediaItem = runCatching {
+                            runBlocking(Dispatchers.IO) { findMediaItem(mediaId) }
+                        }.getOrNull()
+
+                        val extras = mediaItem?.mediaMetadata?.extras?.songBundle
+                        if (extras?.durationText == null) {
+                            metadataFormat
+                                ?.approxDurationMs
+                                ?.div(1000)
+                                ?.let(DateUtils::formatElapsedTime)
+                                ?.removePrefix("0")
+                                ?.let { durationText ->
+                                    extras?.durationText = durationText
+                                    Database.updateDurationText(mediaId, durationText)
+                                }
+                        }
+
+                        transaction {
+                            runCatching {
+                                mediaItem?.let(Database::insert)
+                                Database.insert(
+                                    Format(
+                                        songId = mediaId,
+                                        itag = info?.formatId?.toIntOrNull() ?: firstDirect?.itag,
+                                        mimeType = metadataFormat?.mimeType,
+                                        bitrate = format?.abr?.let { it * 1000 }?.toLong()
+                                            ?: firstDirect?.bitrate,
+                                        loudnessDb = body?.playerConfig?.audioConfig?.normalizedLoudnessDb,
+                                        contentLength = info?.fileSize ?: firstDirect?.contentLength,
+                                        lastModified = metadataFormat?.lastModified
+                                    )
+                                )
+                            }
+                        }
+
+                        streamUrlCache.current(mediaId, now)
+                            ?.let { candidate ->
+                                dataSpec
+                                    .withUri(candidate.uri.toUri())
+                                    .ranged(candidate.contentLength)
+                            } ?: throw UnplayableException()
                     }
-
-                    uriCache.push(
-                        key = mediaId,
-                        meta = info.fileSize,
-                        uri = uri
-                    )
-
-                    dataSpec
-                        .withUri(uri)
-                        .ranged(info.fileSize)
                 }
             }
-        }.handleUnknownErrors {
-            uriCache.clear()
+
+            return StreamCandidateDataSourceFactory(resolving, streamUrlCache)
+                .handleUnknownErrors()
         }
     }
 }
