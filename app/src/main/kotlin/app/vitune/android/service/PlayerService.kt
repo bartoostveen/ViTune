@@ -246,15 +246,15 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     private val stallWatchdogTickMs = 10_000L
     private val stallMinProgressMs = 2_000L
     private val maxStallRecoveries = 3
-    private val recentlyPlayingWindowMs = 60_000L
     private val externalPauseGraceMs = 15_000L
+    private val stallHealthyWindowMs = 30_000L
 
     private var userInitiatedPause = false
-    private var lastPlayingAt = 0L
     private var lastSampledPosition = -1L
     private var lastSampledAt = 0L
     private var stallRecoveries = 0
-    private var externalPauseSince = 0L
+    private var lastRecoveryAt = 0L
+    private var pendingExternalPauseAt = 0L
     private var lastWatchdogMediaId: String? = null
 
     private val binder = Binder()
@@ -437,16 +437,15 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         super.onTaskRemoved(rootIntent)
     }
 
-    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) =
+    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
         maybeSavePlayerQueue()
+        pendingExternalPauseAt =
+            if (playWhenReady || userInitiatedPause || isInAudioCall()) 0L else SystemClock.elapsedRealtime()
+    }
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
-        if (isPlaying) {
-            lastPlayingAt = SystemClock.elapsedRealtime()
-            lastSampledPosition = -1L
-            externalPauseSince = 0L
-        }
+        if (isPlaying) lastSampledPosition = -1L
     }
 
     override fun onDestroy() {
@@ -938,7 +937,6 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
         val now = SystemClock.elapsedRealtime()
         when {
             player.playWhenReady && player.playbackState == Player.STATE_READY -> {
-                externalPauseSince = 0L
                 val position = player.currentPosition
                 if (lastSampledPosition >= 0L) {
                     val elapsed = now - lastSampledAt
@@ -947,6 +945,13 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                     val minProgress = stallMinProgressMs.coerceAtMost(expectedProgress / 4)
                     if (elapsed >= stallWatchdogTickMs && delta in -1_000L until minProgress.coerceAtLeast(1L)) {
                         recoverFromStalledPlayback()
+                    } else if (
+                        stallRecoveries > 0 &&
+                        lastRecoveryAt > 0L &&
+                        now - lastRecoveryAt > stallHealthyWindowMs
+                    ) {
+                        stallRecoveries = 0
+                        lastRecoveryAt = 0L
                     }
                 }
                 lastSampledPosition = position
@@ -954,31 +959,26 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             }
 
             !player.playWhenReady && player.playbackState == Player.STATE_READY -> {
-                val externallyPaused =
-                    !userInitiatedPause &&
+                if (
+                    pendingExternalPauseAt > 0L &&
+                        !userInitiatedPause &&
                         !isInAudioCall() &&
-                        lastPlayingAt > 0L &&
-                        now - lastPlayingAt < recentlyPlayingWindowMs
-                if (externallyPaused) {
-                    if (externalPauseSince == 0L) {
-                        externalPauseSince = now
-                    } else if (now - externalPauseSince >= externalPauseGraceMs) {
-                        Log.w("PlayerService", "Resuming after external pause")
-                        externalPauseSince = 0L
-                        player.play()
-                    }
-                } else {
-                    externalPauseSince = 0L
+                        now - pendingExternalPauseAt >= externalPauseGraceMs
+                ) {
+                    Log.w("PlayerService", "Resuming after external pause")
+                    pendingExternalPauseAt = 0L
+                    player.play()
                 }
             }
 
-            else -> externalPauseSince = 0L
+            else -> pendingExternalPauseAt = 0L
         }
     }
 
     private fun recoverFromStalledPlayback() {
         if (stallRecoveries >= maxStallRecoveries) return
         stallRecoveries++
+        lastRecoveryAt = SystemClock.elapsedRealtime()
         Log.w("PlayerService", "Playback stall detected, recovery $stallRecoveries of $maxStallRecoveries")
         val position = player.currentPosition
         if (stallRecoveries == 1) {
