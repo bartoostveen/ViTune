@@ -138,6 +138,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 private const val TAG = "MainActivity"
 private val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -566,6 +571,8 @@ class MainApplication : Application(), SingletonImageLoader.Factory, Configurati
 }
 
 object Dependencies {
+    private const val YT_DLP_TIMEOUT_MILLIS = 60_000L
+
     lateinit var application: MainApplication
         private set
 
@@ -581,9 +588,20 @@ object Dependencies {
             .also { if (!it.canExecute()) it.setExecutable(true) }
     }
 
-    fun runDownload(id: String): String = module
-        .callAttr("download", quickjsPath.absolutePath, id)
-        .toString()
+    private val downloadExecutor by lazy { Executors.newSingleThreadExecutor() }
+
+    fun runDownload(id: String): String =
+        try {
+            downloadExecutor
+                .submit<String> {
+                    module.callAttr("download", quickjsPath.absolutePath, id).toString()
+                }
+                .get(YT_DLP_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+        } catch (e: TimeoutException) {
+            throw IOException("yt-dlp resolve timed out for $id", e)
+        } catch (e: ExecutionException) {
+            throw e.cause ?: e
+        }
 
     fun upgradeYoutubeDl(packageName: String = "yt-dlp"): Boolean {
         val success = runCatching { module.callAttr("upgrade", packageName) }
