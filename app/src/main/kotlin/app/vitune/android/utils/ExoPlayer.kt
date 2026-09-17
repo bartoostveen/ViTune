@@ -121,7 +121,8 @@ fun DataSource.Factory.withFallback(
 
 class StreamCandidateDataSourceFactory(
     private val base: DataSource.Factory,
-    private val streamUrlCache: StreamUrlCache
+    private val streamUrlCache: StreamUrlCache,
+    private val cache: Cache
 ) : DataSource.Factory {
     override fun createDataSource() = object : DataSource {
         private var source: DataSource? = null
@@ -151,12 +152,14 @@ class StreamCandidateDataSourceFactory(
                 } catch (e: IOException) {
                     lastError = e
 
-                    Log.w(TAG, "Stream candidate failed for $mediaId, trying next: $e")
-
                     source?.close()
+
+                    // Rotating mid-track would mix cached bytes of a different stream
+                    if (cache.getCachedSpans(mediaId).isNotEmpty()) throw lastError
 
                     val now = System.currentTimeMillis()
                     streamUrlCache.current(mediaId, now)?.let { candidate ->
+                        Log.w(TAG, "Stream candidate failed for $mediaId, trying next: $e")
                         streamUrlCache.markFailed(mediaId, candidate)
                     }
 

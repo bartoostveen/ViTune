@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.support.v4.media.session.MediaSessionCompat
 import android.text.format.DateUtils
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -226,6 +227,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
 
     private var timerJob: TimerJob? by mutableStateOf(null)
     private var radio: YouTubeRadio? = null
+    private var autoRestart: Pair<String, Int>? = null
+    private val streamUrlCache = StreamUrlCache()
 
     private lateinit var bitmapProvider: BitmapProvider
 
@@ -492,6 +495,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        if (mediaItem != null && autoRestart?.first != mediaItem.mediaId) autoRestart = null
+
         if (
             AppearancePreferences.hideExplicit &&
             mediaItem?.mediaMetadata?.extras?.songBundle?.explicit == true
@@ -536,9 +541,37 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             return
         }
 
+        val prev = player.currentMediaItem ?: return
+
+        val attempts = autoRestart?.takeIf { it.first == prev.mediaId }?.second ?: 0
+        if (attempts < AUTO_RESTART_ATTEMPTS) {
+            autoRestart = prev.mediaId to (attempts + 1)
+
+            Log.w(TAG, "Auto-recovering ${prev.mediaId} after playback error (attempt ${attempts + 1})")
+
+            if (attempts == 0) {
+                player.prepare()
+                player.play()
+            } else {
+                val now = System.currentTimeMillis()
+                streamUrlCache.current(prev.mediaId, now)?.let { candidate ->
+                    streamUrlCache.markFailed(prev.mediaId, candidate)
+                }
+                cache.removeResource(prev.mediaId)
+
+                val duration = player.duration
+                val resume = if (duration > 15_000) player.currentPosition
+                    .coerceIn(0, duration - 15_000) else 0L
+
+                player.seekTo(player.currentMediaItemIndex, resume)
+                player.prepare()
+                player.play()
+            }
+            return
+        }
+
         if (!PlayerPreferences.skipOnError || !player.hasNextMediaItem()) return
 
-        val prev = player.currentMediaItem ?: return
         player.seekToNextMediaItem()
 
         ServiceNotifications.autoSkip.sendNotification(this) {
@@ -1085,7 +1118,8 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 }
             },
             context = applicationContext,
-            cache = cache
+            cache = cache,
+            streamUrlCache = streamUrlCache
         ),
         /* extractorsFactory = */
         DefaultExtractorsFactory()
@@ -1351,6 +1385,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
     companion object {
         private const val DEFAULT_CACHE_DIRECTORY = "exoplayer"
         private const val DEFAULT_CHUNK_LENGTH = 512 * 1024L
+        private const val AUTO_RESTART_ATTEMPTS = 2
 
         fun createDatabaseProvider(context: Context) = StandaloneDatabaseProvider(context)
         fun createCache(
@@ -1514,7 +1549,7 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                 }
             }
 
-            return StreamCandidateDataSourceFactory(resolving, streamUrlCache)
+            return StreamCandidateDataSourceFactory(resolving, streamUrlCache, cache)
                 .handleUnknownErrors()
         }
     }
