@@ -27,7 +27,7 @@ detekt = { id = "dev.detekt", version.ref = "detekt" }
 chaquo = { id = "com.chaquo.python", version = "17.0.0" }
 
 [libraries]
-core_ktx = { module = "androidx.core:core-ktx", version = "1.19.0" }
+core_ktx = { module = "androidx.core:core-ktx", version = "1.19.1" }
 
 kotlin_coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.11.0" }
 kotlin_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.8.0" }
