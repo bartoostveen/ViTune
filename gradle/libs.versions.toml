@@ -24,7 +24,7 @@ kotlin_compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin_parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
-chaquo = { id = "com.chaquo.python", version = "17.1.0" }
+chaquo = { id = "com.chaquo.python", version = "17.2.0" }
 
 [libraries]
 core_ktx = { module = "androidx.core:core-ktx", version = "1.19.1" }
