@@ -17,7 +17,7 @@ android {
 
     val abis = listOf("arm64-v8a", "x86_64")
     val cmakeVersion = "4.1.2"
-    ndkVersion = "29.0.14206865"
+    ndkVersion = "30.0.16248370"
 
     defaultConfig {
         applicationId = appId
