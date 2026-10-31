@@ -28,8 +28,6 @@ android {
         versionCode = System.getenv("ANDROID_VERSION_CODE")?.toIntOrNull() ?: 25
         versionName = project.version.toString()
 
-        multiDexEnabled = true
-
         ndk {
             //noinspection ChromeOsAbiSupport
             abiFilters += abis
@@ -213,7 +211,9 @@ dependencies {
     implementation(libs.workmanager)
     implementation(libs.workmanager.ktx)
 
+    //noinspection LoginCredentials
     implementation(libs.credentials)
+    //noinspection LoginCredentials
     implementation(libs.credentials.play)
 
     implementation(libs.kotlin.coroutines)
