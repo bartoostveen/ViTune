@@ -11,6 +11,7 @@ import androidx.palette.graphics.Palette
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith
+import kotlin.ranges.contains
 
 typealias ParcelableColor = @WriteWith<ColorParceler> Color
 typealias ParcelableDp = @WriteWith<DpParceler> Dp
@@ -179,7 +180,9 @@ fun dynamicAccentColorOf(
     val palette = Palette
         .from(bitmap)
         .maximumColorCount(8)
-        .addFilter(if (isDark) ({ _, hsl -> hsl[0] !in 36f..100f }) else null)
+        .let {
+            if (isDark) it.addFilter { _, hsl -> hsl[0] !in 36f..100f } else it
+        }
         .generate()
 
     val hsl = if (isDark) {
