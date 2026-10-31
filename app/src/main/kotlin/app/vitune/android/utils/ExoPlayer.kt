@@ -16,6 +16,7 @@ import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
+import kotlinx.coroutines.CancellationException
 import java.io.EOFException
 import kotlin.math.pow
 
@@ -164,12 +165,14 @@ class RetryingDataSourceFactory(
     override fun createDataSource() = Source(parent.createDataSource())
 }
 
-// TODO: fix this mess
 inline fun <reified T : Throwable> DataSource.Factory.retryIf(
     maxRetries: Int = 5,
     printStackTrace: Boolean = false,
     exponential: Boolean = true
-) = retryIf(maxRetries, printStackTrace, exponential) { ex -> ex.findCause<T>() != null }
+) = retryIf(maxRetries, printStackTrace, exponential) { ex ->
+    val cause = ex.findCause<T>()
+    cause != null && cause !is CancellationException
+}
 
 private const val TAG = "DataSource.Factory"
 
@@ -178,7 +181,8 @@ fun DataSource.Factory.retryIf(
     printStackTrace: Boolean = false,
     exponential: Boolean = true,
     predicate: (Throwable) -> Boolean
-): DataSource.Factory = RetryingDataSourceFactory(this, maxRetries, printStackTrace, exponential, predicate)
+): DataSource.Factory =
+    RetryingDataSourceFactory(this, maxRetries, printStackTrace, exponential, predicate)
 
 val Cache.asDataSource: CacheDataSource.Factory get() = CacheDataSource.Factory().setCache(this)
 

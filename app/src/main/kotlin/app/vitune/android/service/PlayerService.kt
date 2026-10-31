@@ -98,6 +98,7 @@ import app.vitune.android.utils.intent
 import app.vitune.android.utils.mediaItems
 import app.vitune.android.utils.progress
 import app.vitune.android.utils.readOnlyWhen
+import app.vitune.android.utils.retryIf
 import app.vitune.android.utils.setPlaybackPitch
 import app.vitune.android.utils.shouldBePlaying
 import app.vitune.android.utils.thumbnail
@@ -1465,6 +1466,6 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
             }
         }.handleUnknownErrors {
             uriCache.clear()
-        }
+        }.retryIf<Throwable>(maxRetries = 2)
     }
 }
