@@ -1,0 +1,6 @@
+* Updated dependencies
+* Fixed an issue where sometimes the queue would not show up correctly on a remote device (e.g. wearables, Android Auto)
+* Fixed an issue where the player would not retry fetching the stream in some cases
+* Fixed security issues
+* Improved stability
+* Improved player reliability
