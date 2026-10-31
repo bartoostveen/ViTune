@@ -8,7 +8,7 @@ agp = "9.5.0"
 
 room = "2.8.5"
 media3 = "1.11.1"
-ktor = "3.6.0"
+ktor = "3.6.1"
 detekt = "2.0.0-alpha.6"
 workmanager = "2.12.0"
 credentials = "1.6.0"
