@@ -176,6 +176,7 @@ suspend fun Result<Innertube.PlaylistOrAlbumPage>.completed(
     var depth = 0
 
     val context = currentCoroutineContext()
+    println(continuation)
 
     while (continuation != null && depth++ < maxDepth && context.isActive) {
         val newSongs = Innertube

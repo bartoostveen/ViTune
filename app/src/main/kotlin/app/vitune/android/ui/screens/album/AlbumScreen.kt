@@ -69,59 +69,65 @@ fun AlbumScreen(browseId: String) {
 
     PersistMapCleanup(prefix = "album/$browseId/")
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(browseId) {
         Database
             .albumSongs(browseId)
             .distinctUntilChanged()
-            .combine(
-                Database
-                    .album(browseId)
-                    .distinctUntilChanged()
-                    .cancellable()
-            ) { currentSongs, currentAlbum ->
+            .cancellable()
+            .collect { songs = it.toImmutableList() }
+    }
+
+    LaunchedEffect(browseId) {
+        Database
+            .album(browseId)
+            .distinctUntilChanged()
+            .cancellable()
+            .collect { currentAlbum ->
                 album = currentAlbum
-                songs = currentSongs.toImmutableList()
+            }
+    }
 
-                withContext(Dispatchers.IO) {
-                    Innertube.albumPage(BrowseBody(browseId = browseId))
-                        ?.completed()
-                        ?.onSuccess { newAlbumPage ->
-                            albumPage = newAlbumPage
+    LaunchedEffect(browseId) {
+        withContext(Dispatchers.IO) {
+            Innertube
+                .albumPage(BrowseBody(browseId = browseId))
+                ?.completed()
+                ?.onSuccess { newAlbumPage ->
+                    albumPage = newAlbumPage
 
-                            transaction {
-                                Database.clearAlbum(browseId)
+                    transaction {
+                        Database.clearAlbum(browseId)
 
-                                Database.upsert(
-                                    album = Album(
-                                        id = browseId,
-                                        title = newAlbumPage.title,
-                                        description = newAlbumPage.description,
-                                        thumbnailUrl = newAlbumPage.thumbnail?.url,
-                                        year = newAlbumPage.year,
-                                        authorsText = newAlbumPage.authors
-                                            ?.joinToString("") { it.name.orEmpty() },
-                                        shareUrl = newAlbumPage.url,
-                                        timestamp = System.currentTimeMillis(),
-                                        bookmarkedAt = album?.bookmarkedAt,
-                                        otherInfo = newAlbumPage.otherInfo
-                                    ),
-                                    songAlbumMaps = newAlbumPage
-                                        .songsPage
-                                        ?.items
-                                        ?.map { it.asMediaItem }
-                                        ?.onEach { Database.insert(it) }
-                                        ?.mapIndexed { position, mediaItem ->
-                                            SongAlbumMap(
-                                                songId = mediaItem.mediaId,
-                                                albumId = browseId,
-                                                position = position
-                                            )
-                                        } ?: emptyList()
-                                )
-                            }
-                        }?.exceptionOrNull()?.printStackTrace()
-                }
-            }.collect()
+                        Database.upsert(
+                            album = Album(
+                                id = browseId,
+                                title = newAlbumPage.title,
+                                description = newAlbumPage.description,
+                                thumbnailUrl = newAlbumPage.thumbnail?.url,
+                                year = newAlbumPage.year,
+                                authorsText = newAlbumPage.authors
+                                    ?.joinToString("") { it.name.orEmpty() },
+                                shareUrl = newAlbumPage.url,
+                                timestamp = System.currentTimeMillis(),
+                                bookmarkedAt = album?.bookmarkedAt,
+                                otherInfo = newAlbumPage.otherInfo
+                            ),
+                            songAlbumMaps = newAlbumPage
+                                .songsPage
+                                ?.items
+                                ?.map { it.asMediaItem }
+                                ?.onEach { Database.insert(it) }
+                                ?.mapIndexed { position, mediaItem ->
+                                    SongAlbumMap(
+                                        songId = mediaItem.mediaId,
+                                        albumId = browseId,
+                                        position = position
+                                    )
+                                } ?: emptyList()
+                        )
+                    }
+                }?.exceptionOrNull()?.printStackTrace()
+        }
     }
 
     RouteHandler {
