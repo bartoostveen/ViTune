@@ -1,0 +1,2 @@
+* Fixed a regression in the security release that prevented ViTune from fetching any data
+* Fixed a small issue where ViTune would continuously refetch albums
