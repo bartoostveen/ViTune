@@ -53,3 +53,6 @@
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
 -keep class ch.qos.logback.classic.android.** { *; }
+
+-keep class org.brotli.dec.DictionaryData
+-keepnames class org.brotli.dec.Dictionary
