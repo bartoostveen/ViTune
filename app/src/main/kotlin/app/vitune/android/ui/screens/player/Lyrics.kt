@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -264,8 +265,7 @@ fun Lyrics(
         hintText = stringResource(R.string.enter_lyrics),
         initialTextInput = (if (shouldShowSynchronizedLyrics) lyrics?.synced else lyrics?.fixed)
             .orEmpty(),
-        singleLine = false,
-        maxLines = 10,
+        lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 10),
         isTextInputValid = { true },
         onDismiss = { editing = false },
         onAccept = {
@@ -667,13 +667,12 @@ fun LrcLibSearchDialog(
     }
 
     TextField(
-        value = query,
+        initialText = query,
         onValueChange = setQuery,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp),
-        maxLines = 1,
-        singleLine = true
+        lineLimits = TextFieldLineLimits.SingleLine,
     )
     Spacer(modifier = Modifier.height(8.dp))
 

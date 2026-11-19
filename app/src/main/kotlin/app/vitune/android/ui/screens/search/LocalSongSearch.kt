@@ -11,15 +11,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import app.vitune.android.Database
 import app.vitune.android.LocalPlayerAwareWindowInsets
@@ -42,13 +47,17 @@ import app.vitune.core.ui.Dimensions
 import app.vitune.core.ui.LocalAppearance
 import app.vitune.providers.innertube.models.NavigationEndpoint
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(FlowPreview::class)
 @Composable
 fun LocalSongSearch(
-    textFieldValue: TextFieldValue,
-    onTextFieldValueChange: (TextFieldValue) -> Unit,
-    decorationBox: @Composable (@Composable () -> Unit) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    state: TextFieldState = rememberTextFieldState(),
+    decorator: TextFieldDecorator? = null,
 ) {
     val (colorPalette, typography) = LocalAppearance.current
     val binder = LocalPlayerServiceBinder.current
@@ -56,11 +65,17 @@ fun LocalSongSearch(
 
     var items by persistList<Song>("search/local/songs")
 
-    LaunchedEffect(textFieldValue.text) {
-        if (textFieldValue.text.length > 1)
-            Database
-                .search("%${textFieldValue.text}%")
-                .collect { items = it.toImmutableList() }
+    LaunchedEffect(state) {
+        snapshotFlow { state.text }
+            .distinctUntilChanged()
+            .debounce(100.milliseconds)
+            .collect { query ->
+                if (query.isEmpty()) return@collect
+
+                Database
+                    .search("%${query}%")
+                    .collect { items = it.toImmutableList() }
+            }
     }
 
     val lazyListState = rememberLazyListState()
@@ -81,20 +96,18 @@ fun LocalSongSearch(
                 Header(
                     titleContent = {
                         BasicTextField(
-                            value = textFieldValue,
-                            onValueChange = onTextFieldValueChange,
+                            state = state,
                             textStyle = typography.xxl.medium.align(TextAlign.End),
-                            singleLine = true,
-                            maxLines = 1,
+                            lineLimits = TextFieldLineLimits.SingleLine,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             cursorBrush = SolidColor(colorPalette.text),
-                            decorationBox = decorationBox
+                            decorator = decorator
                         )
                     },
                     actionsContent = {
-                        if (textFieldValue.text.isNotEmpty()) SecondaryTextButton(
+                        if (state.text.isNotEmpty()) SecondaryTextButton(
                             text = stringResource(R.string.clear),
-                            onClick = { onTextFieldValueChange(TextFieldValue()) }
+                            onClick = { state.clearText() }
                         )
                     }
                 )

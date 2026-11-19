@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +38,7 @@ import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -62,11 +63,12 @@ fun TextFieldDialog(
     cancelText: String = stringResource(R.string.cancel),
     doneText: String = stringResource(R.string.done),
     initialTextInput: String = "",
-    singleLine: Boolean = true,
-    maxLines: Int = 1,
+    lineLimits: TextFieldLineLimits = TextFieldLineLimits.SingleLine,
     onCancel: () -> Unit = onDismiss,
     isTextInputValid: (String) -> Boolean = { it.isNotEmpty() },
-    keyboardOptions: KeyboardOptions = KeyboardOptions()
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        imeAction = if (lineLimits == TextFieldLineLimits.SingleLine) ImeAction.Done else ImeAction.None
+    )
 ) = DefaultDialog(
     onDismiss = onDismiss,
     modifier = modifier
@@ -82,25 +84,25 @@ fun TextFieldDialog(
     }
 
     TextField(
-        value = value,
+        initialText = value,
         onValueChange = { value = it },
-        textStyle = typography.xs.semiBold.center,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        hintText = hintText,
-        keyboardActions = KeyboardActions(
-            onDone = {
-                if (isTextInputValid(value)) {
-                    onDismiss()
-                    onAccept(value)
-                }
-            }
-        ),
-        keyboardOptions = keyboardOptions,
         modifier = Modifier
             .padding(all = 16.dp)
             .weight(weight = 1f, fill = false)
-            .focusRequester(focusRequester)
+            .focusRequester(focusRequester),
+        textStyle = typography.xs.semiBold.center,
+        lineLimits = lineLimits,
+        onKeyboardAction = { performDefaultAction ->
+            if (!isTextInputValid(value)) {
+                return@TextField
+            }
+
+            onDismiss()
+            onAccept(value)
+            performDefaultAction()
+        },
+        keyboardOptions = keyboardOptions,
+        hintText = hintText,
     )
 
     Row(

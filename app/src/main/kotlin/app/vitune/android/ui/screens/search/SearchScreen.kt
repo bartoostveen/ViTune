@@ -6,16 +6,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
 import app.vitune.android.R
 import app.vitune.android.ui.components.themed.Scaffold
 import app.vitune.android.ui.screens.GlobalRoutes
@@ -28,7 +27,7 @@ import app.vitune.core.ui.LocalAppearance
 @Route
 @Composable
 fun SearchScreen(
-    initialTextInput: String,
+    initialText: String,
     onSearch: (String) -> Unit,
     onViewPlaylist: (String) -> Unit
 ) {
@@ -36,17 +35,9 @@ fun SearchScreen(
 
     val [tabIndex, onTabChanged] = rememberSaveable { mutableIntStateOf(0) }
 
-    val [textFieldValue, onTextFieldValueChanged] = rememberSaveable(
-        initialTextInput,
-        stateSaver = TextFieldValue.Saver
-    ) {
-        mutableStateOf(
-            TextFieldValue(
-                text = initialTextInput,
-                selection = TextRange(initialTextInput.length)
-            )
-        )
-    }
+    val state = rememberTextFieldState(
+        initialText = initialText
+    )
 
     PersistMapCleanup(prefix = "search/")
 
@@ -54,10 +45,10 @@ fun SearchScreen(
         GlobalRoutes()
 
         Content {
-            val decorationBox: @Composable (@Composable () -> Unit) -> Unit = { innerTextField ->
+            val decorator = TextFieldDecorator { innerTextField ->
                 Box {
                     AnimatedVisibility(
-                        visible = textFieldValue.text.isEmpty(),
+                        visible = state.text.isEmpty(),
                         enter = fadeIn(tween(300)),
                         exit = fadeOut(tween(300)),
                         modifier = Modifier.align(Alignment.CenterEnd)
@@ -87,18 +78,16 @@ fun SearchScreen(
                 saveableStateHolder.SaveableStateProvider(currentTabIndex) {
                     when (currentTabIndex) {
                         0 -> OnlineSearch(
-                            textFieldValue = textFieldValue,
-                            onTextFieldValueChange = onTextFieldValueChanged,
+                            state = state,
                             onSearch = onSearch,
                             onViewPlaylist = onViewPlaylist,
-                            decorationBox = decorationBox,
+                            decorator = decorator,
                             focused = child == null
                         )
 
                         1 -> LocalSongSearch(
-                            textFieldValue = textFieldValue,
-                            onTextFieldValueChange = onTextFieldValueChanged,
-                            decorationBox = decorationBox
+                            state = state,
+                            decorator = decorator
                         )
                     }
                 }

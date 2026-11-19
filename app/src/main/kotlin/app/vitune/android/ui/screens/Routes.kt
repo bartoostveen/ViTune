@@ -90,9 +90,9 @@ fun RouteHandlerScope.GlobalRoutes() {
         SettingsScreen()
     }
 
-    searchRoute { initialTextInput ->
+    searchRoute { initialText ->
         SearchScreen(
-            initialTextInput = initialTextInput,
+            initialText = initialText,
             onSearch = { query ->
                 searchResultRoute(query)
 

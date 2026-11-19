@@ -18,15 +18,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -38,9 +45,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.LocalPinnableContainer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.vitune.android.Database
@@ -65,49 +70,61 @@ import app.vitune.providers.innertube.models.bodies.SearchSuggestionsBody
 import app.vitune.providers.innertube.requests.searchSuggestions
 import io.ktor.http.Url
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(FlowPreview::class)
 @Composable
 fun OnlineSearch(
-    textFieldValue: TextFieldValue,
-    onTextFieldValueChange: (TextFieldValue) -> Unit,
     onSearch: (String) -> Unit,
     onViewPlaylist: (String) -> Unit,
-    decorationBox: @Composable (@Composable () -> Unit) -> Unit,
     focused: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    state: TextFieldState = rememberTextFieldState(),
+    decorator: TextFieldDecorator? = null,
 ) = Box(modifier = modifier) {
     val (colorPalette, typography) = LocalAppearance.current
 
     var history by persistList<SearchQuery>("search/online/history")
     var suggestionsResult by persist<Result<List<String>?>?>("search/online/suggestionsResult")
 
-    LaunchedEffect(textFieldValue.text) {
+    LaunchedEffect(state) {
         if (DataPreferences.pauseSearchHistory) return@LaunchedEffect
 
-        Database.queries("%${textFieldValue.text}%")
-            .distinctUntilChanged { old, new -> old.size == new.size }
-            .collect { history = it.toImmutableList() }
+        snapshotFlow { state.text }
+            .distinctUntilChanged()
+            .debounce(100.milliseconds)
+            .collect { query ->
+                Database.queries("%${query}%")
+                    .distinctUntilChanged { old, new -> old.size == new.size }
+                    .collect { history = it.toImmutableList() }
+            }
     }
 
-    LaunchedEffect(textFieldValue.text) {
-        if (textFieldValue.text.isEmpty()) return@LaunchedEffect
-
-        delay(500.milliseconds)
-        suggestionsResult = Innertube.searchSuggestions(
-            body = SearchSuggestionsBody(input = textFieldValue.text)
-        )
+    LaunchedEffect(state) {
+        snapshotFlow { state.text }
+            .distinctUntilChanged()
+            .debounce(100.milliseconds)
+            .collect { query ->
+                if (query.isEmpty()) return@collect
+                suggestionsResult = Innertube.searchSuggestions(
+                    body = SearchSuggestionsBody(input = query.toString())
+                )
+            }
     }
 
-    val playlistId = remember(textFieldValue.text) {
-        runCatching {
-            Url(textFieldValue.text).takeIf {
-                it.host.endsWith("youtube.com", ignoreCase = true) &&
-                    it.segments.lastOrNull()?.equals("playlist", ignoreCase = true) == true
-            }?.parameters?.get("list")
-        }.getOrNull()
+    val playlistId by remember(state) {
+        derivedStateOf {
+            runCatching {
+                Url(state.text.toString()).takeIf {
+                    it.host.endsWith("youtube.com", ignoreCase = true) &&
+                        it.segments.lastOrNull()?.equals("playlist", ignoreCase = true) == true
+                }?.parameters?.get("list")
+            }.getOrNull()
+        }
     }
 
     val focusRequester = remember { FocusRequester() }
@@ -144,38 +161,37 @@ fun OnlineSearch(
             Header(
                 titleContent = {
                     BasicTextField(
-                        value = textFieldValue,
-                        onValueChange = onTextFieldValueChange,
+                        state = state,
                         textStyle = typography.xxl.medium.align(TextAlign.End),
-                        singleLine = true,
-                        maxLines = 1,
+                        lineLimits = TextFieldLineLimits.SingleLine,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                if (textFieldValue.text.isNotEmpty()) onSearch(textFieldValue.text)
-                            }
-                        ),
+                        onKeyboardAction = { performDefaultAction ->
+                            if (state.text.isEmpty()) return@BasicTextField
+
+                            onSearch(state.text.toString())
+                            performDefaultAction()
+                        },
                         cursorBrush = SolidColor(colorPalette.text),
-                        decorationBox = decorationBox,
+                        decorator = decorator,
                         modifier = Modifier.focusRequester(focusRequester)
                     )
                 },
                 actionsContent = {
-                    if (playlistId != null) {
+                    playlistId?.let { playlistId ->
                         val isAlbum = playlistId.startsWith("OLAK5uy_")
 
                         SecondaryTextButton(
                             text = if (isAlbum) stringResource(R.string.view_album)
                             else stringResource(R.string.view_playlist),
-                            onClick = { onViewPlaylist(textFieldValue.text) }
+                            onClick = { onViewPlaylist(state.text.toString()) }
                         )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    if (textFieldValue.text.isNotEmpty()) SecondaryTextButton(
+                    if (state.text.isNotEmpty()) SecondaryTextButton(
                         text = stringResource(R.string.clear),
-                        onClick = { onTextFieldValueChange(TextFieldValue()) }
+                        onClick = { state.clearText() }
                     )
                 }
             )
@@ -237,14 +253,7 @@ fun OnlineSearch(
                         .clickable(
                             indication = ripple(bounded = false),
                             interactionSource = remember { MutableInteractionSource() },
-                            onClick = {
-                                onTextFieldValueChange(
-                                    TextFieldValue(
-                                        text = searchQuery.query,
-                                        selection = TextRange(searchQuery.query.length)
-                                    )
-                                )
-                            }
+                            onClick = { state.setTextAndPlaceCursorAtEnd(searchQuery.query) }
                         )
                         .rotate(225f)
                         .padding(horizontal = 8.dp)
@@ -288,14 +297,7 @@ fun OnlineSearch(
                             .clickable(
                                 indication = ripple(bounded = false),
                                 interactionSource = remember { MutableInteractionSource() },
-                                onClick = {
-                                    onTextFieldValueChange(
-                                        TextFieldValue(
-                                            text = suggestion,
-                                            selection = TextRange(suggestion.length)
-                                        )
-                                    )
-                                }
+                                onClick = { state.setTextAndPlaceCursorAtEnd(suggestion) }
                             )
                             .rotate(225f)
                             .padding(horizontal = 8.dp)
