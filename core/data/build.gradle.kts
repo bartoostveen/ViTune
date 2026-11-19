@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "app.vitune.core.data"
-    compileSdk = 37
+    compileSdk { version = release(37) { minorApiLevel = 2 } }
 
     defaultConfig {
         minSdk = 21

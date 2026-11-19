@@ -13,7 +13,7 @@ android {
     val appId = "${project.group}.android"
 
     namespace = appId
-    compileSdk = 37
+    compileSdk { version = release(37) { minorApiLevel = 2 } }
 
     val abis = listOf("arm64-v8a", "x86_64")
     val cmakeVersion = "4.1.2"
