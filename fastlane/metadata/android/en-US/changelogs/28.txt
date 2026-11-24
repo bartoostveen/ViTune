@@ -1,0 +1,4 @@
+* ViTune now supports Android 37.2
+* Fixed streaming stability
+* Improved UI inconsistencies and performance
+* Fixed an edge-case while decoding a (Brotli) response while browsing
