@@ -35,8 +35,6 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.material3.LocalRippleConfiguration
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -220,8 +218,7 @@ class MainActivity : ComponentActivity(), MonetColorsChangedListener {
                 LocalAppearance provides appearance,
                 LocalPlayerServiceBinder provides vm.binder,
                 LocalCredentialManager provides Dependencies.credentialManager,
-                LocalIndication provides ripple(),
-                LocalRippleConfiguration provides rippleConfiguration(appearance = appearance),
+                LocalIndication provides rippleConfiguration(appearance = appearance),
                 LocalShimmerTheme provides shimmerTheme(),
                 LocalLayoutDirection provides LayoutDirection.Ltr,
                 LocalPersistMap provides Dependencies.application.persistMap,
